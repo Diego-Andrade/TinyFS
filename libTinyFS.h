@@ -1,5 +1,21 @@
 #include "libDisk.h"
 
+/* Your program should use a 10240 Byte disk size giving you 40 blocks 
+total. This is a default size. You must be able to support different possible values */
+#define DEFAULT_DISK_SIZE 10240 
+
+/* use this name for a default disk file name */
+#define DEFAULT_DISK_NAME “tinyFSDisk” 	
+
+typedef int fileDescriptor;
+
+// Block types
+#define SUPERBLOCK 1
+#define INODE 2
+#define FILEEXTEND 3
+#define FREE 4
+
+
 /* Makes a blank TinyFS file system of size nBytes on the unix file specified by 
 ‘filename’. This function should use the emulated disk library to open the specified 
 unix file, and upon success, format the file to be a mountable disk. This includes 
