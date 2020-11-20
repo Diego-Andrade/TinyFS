@@ -1,3 +1,18 @@
+/* The default size of the disk and file system block */
+#define BLOCKSIZE 256
+
+/* Your program should use a 10240 Byte disk size giving you 40 blocks 
+total. This is a default size. You must be able to support different possible values */
+#define DEFAULT_DISK_SIZE 10240 
+
+/* use this name for a default disk file name */
+#define DEFAULT_DISK_NAME “tinyFSDisk” 	
+
+typedef int fileDescriptor;
+
+// ERROR CODES
+#define BYTES_SMALLER_THAN_BLOCKSIZE -2
+
 /* This functions opens a regular UNIX file and designates the first nBytes of it as space 
 for the emulated disk. If nBytes is not exactly a multiple of BLOCKSIZE then the disk size 
 will be the closest multiple of BLOCKSIZE that is lower than nByte (but greater than 0) If 
