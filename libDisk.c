@@ -1,11 +1,9 @@
 #include <stdio.h>
-#include "libDisk.h"
-#include "linkedList.h"
 #include <sys/types.h>
 #include <unistd.h>
 
-#define FORMAT_ISSUE -3
-#define OUT_OF_BOUNDS -4
+#include "libDisk.h"
+#include "linkedList.h"
 
 static LList *FDTable;
 static disk_count = 0;
@@ -36,7 +34,7 @@ int closeDisk(int disk)
 int readBlock(int disk, int bNum, void *block)
 {
     off_t offset = bNum*BLOCKSIZE;
-    fileDescriptor fd;
+    int fd;
     Node *entry = getNode(FDTable, disk);
 
     fd = open(getDiskName(disk));
@@ -57,7 +55,7 @@ int readBlock(int disk, int bNum, void *block)
 int writeBlock(int disk, int bNum, void *block)
 {
     off_t offset;
-    fileDescriptor fd;
+    int fd;
     Node *entry;
 
     entry = getNode(FDTable, disk);
