@@ -29,6 +29,7 @@ int readBlock(int disk, int bNum, void *block)
             break;
     }
 
+    close(fd);
     if (c == 0)    //Read error occured
         return FORMAT_ISSUE;
     if (read(fd, block, BLOCKSIZE) < BLOCKSIZE)
