@@ -15,7 +15,7 @@ LList *createLinkedList()
    return list;
 }
 
-Node *makeNewNode(pid_t pid)
+Node *makeNewNode(int diskNum, char* fileName, int numBlocks)
 {
    Node *newNode;
    if((newNode = malloc(sizeof(Node))) == NULL)
@@ -23,14 +23,16 @@ Node *makeNewNode(pid_t pid)
          perror("makeNewNode");
          exit(EXIT_FAILURE);
       }
-   newNode->pid = pid;   
+   newNode->diskNum = diskNum;
+   newNode->fileName = fileName;
+   newNode->numBlocks = numBlocks;  
    newNode->nextNode = newNode;
    return newNode;
 }
 
-void insertNewNodeTail(LList *list, pid_t pid)
+void registerDisk(LList *list, int diskNum, char* fileName, int numBlocks)
 {
-   Node *newNode = makeNewNode(pid);
+   Node *newNode = makeNewNode(diskNum, fileName, numBlocks);
    if (list->head == NULL)
    {
       list->head = newNode;
@@ -45,19 +47,19 @@ void insertNewNodeTail(LList *list, pid_t pid)
    list->numEntries += 1;
 }
 
-void removeNode(LList *list, pid_t pid)
+void removeNode(LList *list, int diskNum)
 {
    Node *prevNode = list->tail;
    Node *currNode = list->head;
 
    if (list->head == NULL)
       return;
-   while (currNode->pid != pid && currNode != list->tail)
+   while (currNode->diskNum != diskNum && currNode != list->tail)
    {
       prevNode = currNode;
       currNode = currNode->nextNode;
    }
-   if (currNode->pid == pid)
+   if (currNode->diskNum == diskNum)
    {
       if (list->numEntries == 1) /*one element*/
       {
@@ -86,7 +88,7 @@ void printNodes(LList *list)
    }
    while (!fullRound)
    {
-      printf("%d->", currNode->pid);
+      printf("%d->", currNode->diskNum);
       currNode = currNode->nextNode;
       if (currNode == list->head)
          fullRound = 1;
@@ -108,4 +110,21 @@ void purgeList(LList *list)
    if (currNode != NULL)
       free(currNode);
    free(list);
+}
+
+//Returns Null if not found
+Node *getNode(LList *list, int diskNum)
+{
+   Node *currNode = list->head;
+
+   if (currNode == NULL)
+      return NULL;
+
+   while(currNode != list->tail)
+   {
+      if (currNode->diskNum == diskNum)
+         return currNode;
+      currNode = currNode->nextNode;
+   }
+   return NULL;
 }

@@ -1,6 +1,12 @@
 #include "libDisk.h"
+#include "linkedList.h"
+#include <sys/types.h>
+#include <unistd.h>
 
 #define FORMAT_ISSUE -3
+#define OUT_OF_BOUNDS -4
+
+static LList *FDTable;
 
 int openDisk(char *filename, int nBytes) {
     if (nBytes < BLOCKSIZE) 
@@ -17,27 +23,46 @@ int closeDisk(int disk)
 
 int readBlock(int disk, int bNum, void *block)
 {
-    int offset = bNum*BLOCKSIZE;
-    int i;
-    char c;
+    off_t offset = bNum*BLOCKSIZE;
     fileDescriptor fd;
+    Node *entry = getNode(FDTable, disk);
 
     fd = open(getDiskName(disk));
-    for (i = 0; i < offset; i++)
+    if (lseek(fd, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
     {
-        if ((c = read(fd, c, 1)) == 0)
-            break;
+        close(fd);
+        return -1;
     }
-
-    close(fd);
-    if (c == 0)    //Read error occured
-        return FORMAT_ISSUE;
     if (read(fd, block, BLOCKSIZE) < BLOCKSIZE)
+    {
+        close(fd);
         return BYTES_SMALLER_THAN_BLOCKSIZE;
+    }
+    close(fd);
     return 0;
 }
 
 int writeBlock(int disk, int bNum, void *block)
 {
+    off_t offset;
+    fileDescriptor fd;
+    Node *entry;
 
+    entry = getNode(FDTable, disk);
+    if (bNum >= entry->numBlocks)
+        return OUT_OF_BOUNDS;
+    offset = bNum*BLOCKSIZE;
+    fd = open(entry->fileName);
+    if (lseek(fd, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
+    {
+        close(fd);
+        return -1;
+    }
+    if (write(fd, block, BLOCKSIZE) < BLOCKSIZE)
+    {
+        close(fd);
+        return BYTES_SMALLER_THAN_BLOCKSIZE;
+    }
+    close(fd);
+    return 0;
 }
