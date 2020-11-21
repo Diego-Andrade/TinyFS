@@ -1,5 +1,7 @@
 #include "linkedList.h"
 
+#define EMPTY_LIST -4
+
 LList *createLinkedList()
 {
    LList *list;
@@ -101,6 +103,8 @@ void purgeList(LList *list)
    Node *prevNode = list->head;
    Node *currNode = list->head;
 
+   if (currNode == NULL)
+      return;
    while(currNode != list->tail)
    {
       currNode = currNode->nextNode;
@@ -127,4 +131,19 @@ Node *getNode(LList *list, int diskNum)
       currNode = currNode->nextNode;
    }
    return NULL;
+}
+
+int getDiskNum(LList *list, char* filename)
+{
+   Node *currNode = list->head;
+
+   if (currNode == NULL)
+      return EMPTY_LIST;
+   while(currNode != list->tail)
+   {
+      if (strcmp(currNode->fileName, filename) == 0)
+         return currNode->diskNum;
+      currNode = currNode->nextNode;
+   }
+   return -1;
 }

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 typedef struct node 
@@ -23,7 +24,7 @@ typedef struct
 void purgeList(LList *list);
 LList *createLinkedList();
 void registerDisk(LList *list, int diskNum, char* fileName, int blockNum);
-void insertNewNodeTail(LList *list, char* fileName, int blockNum, int diskNum);
+int getDiskNum(LList *list, char* filename)
 void removeNode(LList *list, int diskNum);
 void printNodes(LList *list);
 Node *getNode(LList *list, int diskNum);
