@@ -48,18 +48,18 @@ int readBlock(int disk, int bNum, void *block)
 
     file = fopen(entry->fileName, "rb");
     if (file == NULL)
-        return;
+        return -1;
     if (fseek(file, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
     {
-        close(file);
+        fclose(file);
         return -1;
     }
     if (fread(block, BLOCKSIZE, 1, file) < 1)
     {
-        close(file);
+        fclose(file);
         return BYTES_SMALLER_THAN_BLOCKSIZE;
     }
-    close(file);
+    fclose(file);
     return 0;
 }
 
@@ -73,20 +73,20 @@ int writeBlock(int disk, int bNum, void *block)
     if (bNum >= entry->numBlocks)
         return OUT_OF_BOUNDS;
     offset = bNum*BLOCKSIZE;
-    file = fopen(entry->fileName, "rb");
+    file = fopen(entry->fileName, "rb+");
     if (file == NULL)
         return -1;
-    file = fopen(entry->fileName, "wb");
+
     if (fseek(file, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
     {
-        close(file);
+        fclose(file);
         return -1;
     }
     if (fwrite(block, BLOCKSIZE, 1, file) < 1)
     {
-        close(file);
+        fclose(file);
         return BYTES_SMALLER_THAN_BLOCKSIZE;
     }
-    close(file);
+    fclose(file);
     return 0;
 }
