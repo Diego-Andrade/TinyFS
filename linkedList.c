@@ -135,12 +135,10 @@ Node *getNode(LList *list, int diskNum)
    if (list == NULL)
       return NULL;
    currNode = list->head;
-   while(currNode != list->tail)
-   {
-      if (currNode->diskNum == diskNum)
-         return currNode;
+   while(currNode != list->tail && currNode->diskNum != diskNum)
       currNode = currNode->nextNode;
-   }
+   if (currNode->diskNum == diskNum)
+      return currNode;
    return NULL;
 }
 
