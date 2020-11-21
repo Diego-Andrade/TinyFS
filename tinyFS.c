@@ -1,18 +1,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-//#include "libTinyFS.h"
+#include "libDisk.h"
 
 int main(int argc, char const *argv[])
 {
     /* Our demo code? */
     
-    FILE* file = fopen("test.dsk", "wb+");
+    int d = openDisk("Disk1.dsk", 256 * 5);
 
    
-    for (int i = 0; i < 256; i++)
-        fprintf(file, "0");
-    fclose(file);
+    // for (int i = 0; i < 256; i++)
+        
+
+    closeDisk(d);
 
     return 0;
 }

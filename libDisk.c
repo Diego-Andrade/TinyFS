@@ -11,17 +11,17 @@ int openDisk(char *filename, int nBytes) {
     if (nBytes < BLOCKSIZE) 
         return BYTES_SMALLER_THAN_BLOCKSIZE;
 
-    int disk_num = getDiskNum(mountTable, filename);
-
-    if (nBytes == 0 && disk_num != -1) 
-        return disk_num;
-
-    int num_blocks = nBytes % BLOCKSIZE;
-    disk_num = ++disk_count;
-    
     if (mountTable == NULL)
         mountTable = createLinkedList();
         
+    int disk_num = getDiskNum(mountTable, filename);
+
+    if (nBytes == 0 && disk_num > 0) 
+        return disk_num;
+
+    int num_blocks = nBytes / BLOCKSIZE;
+    disk_num = ++disk_count;
+    
     registerDisk(mountTable, disk_num, filename, num_blocks);
 
     FILE* file = fopen(filename, "wb+");
