@@ -47,7 +47,7 @@ int readBlock(int disk, int bNum, void *block)
     int fd;
     Node *entry = getNode(mountTable, disk);
 
-    fd = open(getDiskName(disk));
+    fd = open(entry->fileName);
     if (lseek(fd, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
     {
         close(fd);
