@@ -25,9 +25,9 @@ int openDisk(char *filename, int nBytes) {
     
     registerDisk(mountTable, disk_num, filename, num_blocks);
 
-    FILE* file = fopen(filename, "wb+");
-    for (int i = 0; i < num_blocks * BLOCKSIZE; i++)
-        fprintf(file, "0");
+    FILE* file = fopen(filename, "wb");
+    fseek(file, num_blocks * BLOCKSIZE - 1, SEEK_SET);
+    fwrite("\0", 1, 1, file);
     fclose(file);
 
     return disk_num;
