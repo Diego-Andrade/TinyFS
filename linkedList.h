@@ -25,7 +25,7 @@ void purgeList(LList *list);
 LList *createLinkedList();
 void registerDisk(LList *list, int diskNum, char* fileName, int blockNum);
 int getDiskNum(LList *list, char* filename);
-void removeNode(LList *list, int diskNum);
+int removeNode(LList *list, int diskNum);
 void printNodes(LList *list);
 Node *getNode(LList *list, int diskNum);
 #endif

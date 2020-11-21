@@ -49,13 +49,13 @@ void registerDisk(LList *list, int diskNum, char* fileName, int numBlocks)
    list->numEntries += 1;
 }
 
-void removeNode(LList *list, int diskNum)
+int removeNode(LList *list, int diskNum)
 {
    Node *prevNode = list->tail;
    Node *currNode = list->head;
 
    if (list->head == NULL)
-      return;
+      return EMPTY_LIST;
    while (currNode->diskNum != diskNum && currNode != list->tail)
    {
       prevNode = currNode;
@@ -76,7 +76,9 @@ void removeNode(LList *list, int diskNum)
          list->tail = prevNode;
       free(currNode);
       list->numEntries -= 1;
+      return 0;
    }
+   return -1;
 }
 
 void printNodes(LList *list)

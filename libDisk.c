@@ -34,7 +34,11 @@ int openDisk(char *filename, int nBytes) {
 }
 
 int closeDisk(int disk) {
-    removeNode(mountTable, disk);
+    if (removeNode(mountTable, disk) < 0)
+        return -1;
+    if (mountTable->numEntries == 0)
+        purgeList(mountTable);
+    return 0;
 }
 
 int readBlock(int disk, int bNum, void *block)
