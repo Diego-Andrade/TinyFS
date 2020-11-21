@@ -1,6 +1,5 @@
 #include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <stdlib.h>
 
 #include "libDisk.h"
 #include "linkedList.h"
@@ -44,45 +43,50 @@ int closeDisk(int disk) {
 int readBlock(int disk, int bNum, void *block)
 {
     off_t offset = bNum*BLOCKSIZE;
-    int fd;
+    FILE* file;
     Node *entry = getNode(mountTable, disk);
 
-    fd = open(entry->fileName);
-    if (lseek(fd, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
+    file = fopen(entry->fileName, "rb");
+    if (file == NULL)
+        return;
+    if (fseek(file, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
     {
-        close(fd);
+        close(file);
         return -1;
     }
-    if (read(fd, block, BLOCKSIZE) < BLOCKSIZE)
+    if (fread(block, BLOCKSIZE, 1, file) < 1)
     {
-        close(fd);
+        close(file);
         return BYTES_SMALLER_THAN_BLOCKSIZE;
     }
-    close(fd);
+    close(file);
     return 0;
 }
 
 int writeBlock(int disk, int bNum, void *block)
 {
     off_t offset;
-    int fd;
+    FILE* file;
     Node *entry;
 
     entry = getNode(mountTable, disk);
     if (bNum >= entry->numBlocks)
         return OUT_OF_BOUNDS;
     offset = bNum*BLOCKSIZE;
-    fd = open(entry->fileName);
-    if (lseek(fd, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
+    file = fopen(entry->fileName, "rb");
+    if (file == NULL)
+        return -1;
+    file = fopen(entry->fileName, "wb");
+    if (fseek(file, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
     {
-        close(fd);
+        close(file);
         return -1;
     }
-    if (write(fd, block, BLOCKSIZE) < BLOCKSIZE)
+    if (fwrite(block, BLOCKSIZE, 1, file) < 1)
     {
-        close(fd);
+        close(file);
         return BYTES_SMALLER_THAN_BLOCKSIZE;
     }
-    close(fd);
+    close(file);
     return 0;
 }

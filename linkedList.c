@@ -1,6 +1,6 @@
 #include "linkedList.h"
 
-#define EMPTY_LIST -4
+#define EMPTY_LIST -6
 
 LList *createLinkedList()
 {
@@ -34,7 +34,11 @@ Node *makeNewNode(int diskNum, char* fileName, int numBlocks)
 
 void registerDisk(LList *list, int diskNum, char* fileName, int numBlocks)
 {
-   Node *newNode = makeNewNode(diskNum, fileName, numBlocks);
+   Node *newNode;
+
+   if (list == NULL)
+      return;
+   newNode = makeNewNode(diskNum, fileName, numBlocks);
    if (list->head == NULL)
    {
       list->head = newNode;
@@ -51,11 +55,13 @@ void registerDisk(LList *list, int diskNum, char* fileName, int numBlocks)
 
 int removeNode(LList *list, int diskNum)
 {
-   Node *prevNode = list->tail;
-   Node *currNode = list->head;
+   Node *prevNode;
+   Node *currNode;
 
-   if (list->head == NULL)
+   if (list == NULL || list->head == NULL)
       return EMPTY_LIST;
+   currNode = list->head;
+   prevNode = list->tail;
    while (currNode->diskNum != diskNum && currNode != list->tail)
    {
       prevNode = currNode;
@@ -83,13 +89,14 @@ int removeNode(LList *list, int diskNum)
 
 void printNodes(LList *list)
 {
-   Node *currNode = list->head;
+   Node *currNode;
    int fullRound = 0;
-   if (currNode == NULL)
+   if (list == NULL || list->head == NULL)
    {
       printf("NULL\n");
       return;
    }
+   currNode = list->head;
    while (!fullRound)
    {
       printf("%d->", currNode->diskNum);
@@ -102,11 +109,13 @@ void printNodes(LList *list)
 
 void purgeList(LList *list)
 {
-   Node *prevNode = list->head;
-   Node *currNode = list->head;
+   Node *prevNode;
+   Node *currNode;
 
-   if (currNode == NULL)
+   if (list == NULL)
       return;
+   currNode = list->head;
+   prevNode = list->head;
    while(currNode != list->tail)
    {
       currNode = currNode->nextNode;
@@ -121,11 +130,11 @@ void purgeList(LList *list)
 //Returns Null if not found
 Node *getNode(LList *list, int diskNum)
 {
-   Node *currNode = list->head;
+   Node *currNode;
 
-   if (currNode == NULL)
+   if (list == NULL)
       return NULL;
-
+   currNode = list->head;
    while(currNode != list->tail)
    {
       if (currNode->diskNum == diskNum)
@@ -137,10 +146,11 @@ Node *getNode(LList *list, int diskNum)
 
 int getDiskNum(LList *list, char* filename)
 {
-   Node *currNode = list->head;
+   Node *currNode;
 
-   if (currNode == NULL)
+   if (list == NULL)
       return EMPTY_LIST;
+   currNode = list->head;
    while(currNode != list->tail)
    {
       if (strcmp(currNode->fileName, filename) == 0)
