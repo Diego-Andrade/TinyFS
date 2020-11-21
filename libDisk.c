@@ -8,16 +8,17 @@ static LList *mountTable;
 static int disk_count = 0;
 
 int openDisk(char *filename, int nBytes) {
-    if (nBytes < BLOCKSIZE) 
-        return BYTES_SMALLER_THAN_BLOCKSIZE;
+    int disk_num = 0;    
 
     if (mountTable == NULL)
         mountTable = createLinkedList();
-        
-    int disk_num = getDiskNum(mountTable, filename);
-
+    
+    disk_num = getDiskNum(mountTable, filename);
     if (nBytes == 0 && disk_num > 0) 
         return disk_num;
+    
+    if (nBytes < BLOCKSIZE) 
+        return BYTES_SMALLER_THAN_BLOCKSIZE;
 
     int num_blocks = nBytes / BLOCKSIZE;
     disk_num = ++disk_count;
