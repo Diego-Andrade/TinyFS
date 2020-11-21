@@ -26,7 +26,8 @@ Node *makeNewNode(int diskNum, char* fileName, int numBlocks)
          exit(EXIT_FAILURE);
       }
    newNode->diskNum = diskNum;
-   newNode->fileName = fileName;
+   newNode->fileName = (char*)malloc(strlen(fileName));
+   strcpy(newNode->fileName, fileName);
    newNode->numBlocks = numBlocks;  
    newNode->nextNode = newNode;
    return newNode;
@@ -146,14 +147,12 @@ int getDiskNum(LList *list, char* filename)
 {
    Node *currNode;
 
-   if (list == NULL)
+   if (list == NULL || list->head == NULL)
       return EMPTY_LIST;
    currNode = list->head;
-   while(currNode != list->tail)
-   {
-      if (strcmp(currNode->fileName, filename) == 0)
-         return currNode->diskNum;
+   while(currNode != list->tail && strcmp(currNode->fileName, filename) == 0)
       currNode = currNode->nextNode;
-   }
+   if (strcmp(currNode->fileName, filename) == 0)
+      return currNode->diskNum;
    return -1;
 }
