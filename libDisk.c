@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #include "libDisk.h"
 #include "linkedList.h"
@@ -9,26 +10,30 @@ static int disk_count = 0;
 
 int openDisk(char *filename, int nBytes) {
     int disk_num = 0;    
+    int num_blocks = nBytes / BLOCKSIZE;
 
     if (mountTable == NULL)
         mountTable = createLinkedList();
-    
     disk_num = getDiskNum(mountTable, filename);
+    
     if (nBytes == 0 && disk_num > 0) 
         return disk_num;
     
-    if (nBytes < BLOCKSIZE) 
-        return BYTES_SMALLER_THAN_BLOCKSIZE;
+    FILE* file = fopen(filename, "rb+");
+    if (file == NULL) {
+        if (nBytes < BLOCKSIZE)
+            return BYTES_SMALLER_THAN_BLOCKSIZE;
 
-    int num_blocks = nBytes / BLOCKSIZE;
+        FILE* file = fopen(filename, "wb");
+        fseek(file, num_blocks * BLOCKSIZE - 1, SEEK_SET);
+        fwrite("\0", 1, 1, file);
+        fclose(file);
+    }
+
+    struct stat sb;
+    stat(filename, &sb);
     disk_num = ++disk_count;
-    
-    registerDisk(mountTable, disk_num, filename, num_blocks);
-
-    FILE* file = fopen(filename, "wb");
-    fseek(file, num_blocks * BLOCKSIZE - 1, SEEK_SET);
-    fwrite("\0", 1, 1, file);
-    fclose(file);
+    registerDisk(mountTable, disk_num, filename, (int) sb.st_size);    
 
     return disk_num;
 }
