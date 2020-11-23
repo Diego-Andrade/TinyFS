@@ -33,7 +33,7 @@ int openDisk(char *filename, int nBytes) {
     struct stat sb;
     stat(filename, &sb);
     disk_num = ++disk_count;
-    registerDisk(mountTable, disk_num, filename, (int) sb.st_size);    
+    registerDisk(mountTable, disk_num, filename, (int) (sb.st_size / BLOCKSIZE));    
 
     return disk_num;
 }
