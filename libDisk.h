@@ -1,6 +1,3 @@
-/* The default size of the disk and file system block */
-#define BLOCKSIZE 256
-
 // ERROR CODES
 #define BYTES_SMALLER_THAN_BLOCKSIZE -2
 #define FORMAT_ISSUE -3

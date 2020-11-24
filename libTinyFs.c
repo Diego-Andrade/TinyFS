@@ -2,7 +2,15 @@
 
 #include <stdio.h>
 #include <string.h>
+
+#include "tinyFS.h"
 #include "libDisk.h"
+#include "tinyFS_errno.h"
+
+// FS Info
+int mountedDisk = 0;
+char* mountedDiskName;
+unsigned char spBlk[BLOCKSIZE];
 
 int tfs_mkfs(char *filename, int nBytes) {
     if (nBytes < BLOCKSIZE * 2) return -1;  // Not enough bytes to make a disk
@@ -38,7 +46,17 @@ int tfs_mkfs(char *filename, int nBytes) {
     return 0;
 }
 
-int tfs_mount(char *diskname);
+int tfs_mount(char *diskname) {
+    mountedDisk = openDisk(diskname, 0);
+    if (mountedDisk < 0)
+        return DISK_NOT_FOUND_TO_MOUNT;
+    
+    mountedDiskName = diskname;
+    readBlock(mountedDisk, 0, spBlk);
+
+    return 0;
+}
+
 int tfs_unmount(void);
 
 fileDescriptor tfs_openFile(char *name);
