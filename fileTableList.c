@@ -1,8 +1,8 @@
-#include "linkedList.h"
+#include "fileTableList.h"
 
 #define EMPTY_LIST -6
 
-LList *createLinkedList()
+LList *createTableList()
 {
    LList *list;
 
@@ -17,7 +17,7 @@ LList *createLinkedList()
    return list;
 }
 
-Node *makeNewNode(int diskNum, char* fileName, int numBlocks)
+Node *makeNewNode(char* fileName, int fd)
 {
    Node *newNode;
    if((newNode = malloc(sizeof(Node))) == NULL)
@@ -25,21 +25,19 @@ Node *makeNewNode(int diskNum, char* fileName, int numBlocks)
          perror("makeNewNode");
          exit(EXIT_FAILURE);
       }
-   newNode->diskNum = diskNum;
    newNode->fileName = (char*)malloc(strlen(fileName));
    strcpy(newNode->fileName, fileName);
-   newNode->numBlocks = numBlocks;  
-   newNode->nextNode = newNode;
+   newNode->fd = fd;
    return newNode;
 }
 
-void registerDisk(LList *list, int diskNum, char* fileName, int numBlocks)
+void registerEntry(LList *list, char* fileName, int fd)
 {
    Node *newNode;
 
    if (list == NULL)
       return;
-   newNode = makeNewNode(diskNum, fileName, numBlocks);
+   newNode = makeNewNode(fileName, fd);
    if (list->head == NULL)
    {
       list->head = newNode;
@@ -54,7 +52,7 @@ void registerDisk(LList *list, int diskNum, char* fileName, int numBlocks)
    list->numEntries += 1;
 }
 
-int removeNode(LList *list, int diskNum)
+int removeEntry(LList *list, int fd)
 {
    Node *prevNode;
    Node *currNode;
@@ -63,12 +61,12 @@ int removeNode(LList *list, int diskNum)
       return EMPTY_LIST;
    currNode = list->head;
    prevNode = list->tail;
-   while (currNode->diskNum != diskNum && currNode != list->tail)
+   while (currNode->fd != fd && currNode != list->tail)
    {
       prevNode = currNode;
       currNode = currNode->nextNode;
    }
-   if (currNode->diskNum == diskNum)
+   if (currNode->fd == fd)
    {
       if (list->numEntries == 1) /*one element*/
       {
@@ -88,7 +86,7 @@ int removeNode(LList *list, int diskNum)
    return -1;
 }
 
-void printNodes(LList *list)
+void printTable(LList *list)
 {
    Node *currNode;
    int fullRound = 0;
@@ -100,7 +98,7 @@ void printNodes(LList *list)
    currNode = list->head;
    while (!fullRound)
    {
-      printf("%d->", currNode->diskNum);
+      printf("(%s,%d)->", currNode->fileName, currNode->fd);
       currNode = currNode->nextNode;
       if (currNode == list->head)
          fullRound = 1;
@@ -108,7 +106,7 @@ void printNodes(LList *list)
    printf("\n");
 }
 
-void purgeList(LList *list)
+void purgeTable(LList *list)
 {
    Node *prevNode;
    Node *currNode;
@@ -132,22 +130,21 @@ void purgeList(LList *list)
    free(list);
 }
 
-//Returns Null if not found
-Node *getNode(LList *list, int diskNum)
+char *findFileName(LList *list, int fd)
 {
    Node *currNode;
 
    if (list == NULL)
       return NULL;
    currNode = list->head;
-   while(currNode != list->tail && currNode->diskNum != diskNum)
+   while(currNode != list->tail && currNode->fd != fd)
       currNode = currNode->nextNode;
-   if (currNode->diskNum == diskNum)
-      return currNode;
+   if (currNode->fd == fd)
+      return currNode->fileName;
    return NULL;
 }
 
-int getDiskNum(LList *list, char* filename)
+int findFD(LList *list, char* filename)
 {
    Node *currNode;
 
@@ -157,6 +154,6 @@ int getDiskNum(LList *list, char* filename)
    while(currNode != list->tail && strcmp(currNode->fileName, filename) != 0)
       currNode = currNode->nextNode;
    if (strcmp(currNode->fileName, filename) == 0)
-      return currNode->diskNum;
+      return currNode->fd;
    return -1;
 }
