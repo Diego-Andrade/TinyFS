@@ -14,7 +14,7 @@ char* mountedDiskName;
 unsigned char spBlk[BLOCKSIZE];
 
 //TinyFs Vars
-LList openedFilesList;
+LList *openedFilesList;
 int counter = 0;
 
 int tfs_mkfs(char *filename, int nBytes) {
@@ -40,7 +40,7 @@ int tfs_mkfs(char *filename, int nBytes) {
     *numFreeBlocks = num_blocks;            //numFreeBlocks taking bytes 2-3
     freeBlockPt = buffer + 4;               //Empty block ptr taking bytes 4-7
     *freeBlockPt = BLOCKSIZE;
-    buffer[8] = NULL                        //End of Inode pointer
+    buffer[8] = NULL;                        //End of Inode pointer
     writeBlock(d, 0, buffer);
     
     // Empty blocks
