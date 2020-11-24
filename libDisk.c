@@ -97,6 +97,12 @@ int writeBlock(int disk, int bNum, void *block)
     return 0;
 }
 
-int getSize() {
-    
+// Returns the number of blocks in a disk
+int getDiskSize(int disk) {
+    Node *entry = getNode(mountTable, disk);
+
+    if (entry) 
+        return entry->numBlocks;
+
+    return -1;
 }
