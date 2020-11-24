@@ -96,3 +96,7 @@ int writeBlock(int disk, int bNum, void *block)
     fclose(file);
     return 0;
 }
+
+int getSize() {
+    
+}

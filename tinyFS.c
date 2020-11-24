@@ -1,27 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "tinyFS.h"
-#include "libDisk.h"
+#include "libTinyFS.h"
 
-tfs_mkfs(char* filename, int nBytes)
-{
-
-}
-
-int tfs_mount(char* diskname)
-{
+int main() {
+    /* Our demo code? */
+    tfs_mkfs(DEFAULT_DISK_NAME, DEFAULT_DISK_SIZE);
 
 }
 
-int tfs_unmount(void)
-{
-
-}
-
-int tfs_closeFile(fileDescriptor FD)
-{
-
-}
 
 
