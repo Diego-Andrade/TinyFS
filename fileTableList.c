@@ -17,7 +17,7 @@ LList *createTableList()
    return list;
 }
 
-Node *makeNewNode(char* fileName, int fd)
+Node *makeNewNode(char* fileName, int size, int fd)
 {
    Node *newNode;
    if((newNode = malloc(sizeof(Node))) == NULL)
@@ -27,17 +27,18 @@ Node *makeNewNode(char* fileName, int fd)
       }
    newNode->fileName = (char*)malloc(strlen(fileName));
    strcpy(newNode->fileName, fileName);
+   newNode->size = size;
    newNode->fd = fd;
    return newNode;
 }
 
-void registerEntry(LList *list, char* fileName, int fd)
+void registerEntry(LList *list, char* fileName, int size, int fd)
 {
    Node *newNode;
 
    if (list == NULL)
       return;
-   newNode = makeNewNode(fileName, fd);
+   newNode = makeNewNode(fileName, size, fd);
    if (list->head == NULL)
    {
       list->head = newNode;
@@ -130,7 +131,7 @@ void purgeTable(LList *list)
    free(list);
 }
 
-char *findFileName(LList *list, int fd)
+Node *findEntry_fd(LList *list, int fd)
 {
    Node *currNode;
 
@@ -140,20 +141,20 @@ char *findFileName(LList *list, int fd)
    while(currNode != list->tail && currNode->fd != fd)
       currNode = currNode->nextNode;
    if (currNode->fd == fd)
-      return currNode->fileName;
+      return currNode;
    return NULL;
 }
 
-int findFD(LList *list, char* filename)
+Node *findEntry_name(LList *list, char* filename)
 {
    Node *currNode;
 
    if (list == NULL || list->head == NULL)
-      return EMPTY_LIST;
+      return NULL;
    currNode = list->head;
    while(currNode != list->tail && strcmp(currNode->fileName, filename) != 0)
       currNode = currNode->nextNode;
    if (strcmp(currNode->fileName, filename) == 0)
-      return currNode->fd;
-   return -1;
+      return currNode;
+   return NULL;
 }
