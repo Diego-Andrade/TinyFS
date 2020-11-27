@@ -12,3 +12,4 @@ on the UNIX* machines for examples of the types of errors you might catch and re
 #define WRITE_ERROR -7
 #define INVALID_NAME -8
 #define NO_MORE_SPACE -9
+#define EMPTY_LIST -10

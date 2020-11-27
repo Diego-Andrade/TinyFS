@@ -80,6 +80,7 @@ int removeEntry(LList *list, int fd)
          list->head = currNode->nextNode;
       else if (currNode == list->tail)
          list->tail = prevNode;
+      free(currNode->fileName);
       free(currNode);
       list->numEntries -= 1;
       return 0;

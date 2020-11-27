@@ -43,7 +43,7 @@ int tfs_mkfs(char *filename, int nBytes) {
     *bytes2Ptr = 2;
 
     //buffer[6] = 1;                        //Root Inode
-    writeBlock(d, 0, buffer);
+    writeBlock(d, SUPERBLOCK_BNUM, buffer);
     
     //Root Inode
     memset(buffer, 0, BLOCKSIZE);
@@ -55,7 +55,7 @@ int tfs_mkfs(char *filename, int nBytes) {
     bytes2Ptr = (Bytes2_t)(buffer + 11);    
     *bytes2Ptr = MAX_FILENAME_SIZE + 1 + 4;  //NameSize(9) + stats(2) + size(2)
     //Inode Extend is NULL at end of file (Bytes BLOCKSIZE - 2 to BLOCKSIZE - 1)
-    writeBlock(d, 1, buffer);
+    writeBlock(d, RINODE_BNUM, buffer);
 
     // Empty blocks
     memset(buffer, 0, BLOCKSIZE);
@@ -86,7 +86,7 @@ int tfs_mount(char *diskname) {
         return DISK_NOT_FOUND_TO_MOUNT;
     openedFilesList = createTableList();
     mountedDiskName = diskname;
-    readBlock(mountedDisk, 0, spBlk);
+    readBlock(mountedDisk, SUPERBLOCK_BNUM, spBlk);
 
     return 0;
 }
@@ -97,10 +97,42 @@ int tfs_unmount(void)
     counter = 0;
 }
 
+//Given the address of the entry (file, bnum) return pointer to start of bnum
 Bytes2_t* Inode_GetBlock(int8_t *byte)
 {
     while (*(byte)++ != '\0');
     return (Bytes2_t*)byte;
+}
+
+//Updates free blocks to be file extent and update the super block
+void updateFreeBlock()
+{
+    char block[BLOCKSIZE];
+
+    int oldBlockNum = *((Bytes2_t*)(spBlk + 4));
+    readBlock(mountedDisk, oldBlockNum, block);
+
+    //Update super block
+    *((Bytes2_t*)(spBlk + 4)) = *((Bytes2_t*)(block + 2));
+    *((Bytes2_t*)(spBlk + 2)) -= 1;
+    writeBlock(mountedDisk, 0, spBlk);
+
+    block[BLOCKTYPELOC] = FILEEXTEND;
+    block[MAGICNUMLOC] = MAGICNUMBER;
+    block[2] = 0;                                               //Set blocknum to 0
+    block[3] = 0;
+    writeBlock(mountedDisk, oldBlockNum, block);
+}
+
+//Write next free block into a given block at destination (dest)
+//And calls updateFreeBlock() to update both the super block and free block
+void writeNextFreeBlock(int bNum, Bytes2_t* dest, char *block)
+{
+    *dest = *((Bytes2_t*)(spBlk + 4));
+    if (*blockPtr == 0)
+        return NO_MORE_SPACE;
+    writeBlock(mountedDisk, bNum, block);
+    updateFreeBlock();
 }
 
 fileDescriptor tfs_openFile(char *name)
@@ -150,31 +182,25 @@ fileDescriptor tfs_openFile(char *name)
         }
     }
     //Create a New File
-    Bytes2_t *blockPtr;
-    if (i + FILE_ENTRY_SIZE < BLOCKSIZE - 2)
+    Bytes2_t *blockPtr = (Bytes2_t*)(block + BLOCKSIZE - 2);
+    if (i + FILE_ENTRY_SIZE >= BLOCKSIZE - 2)
     {
-        strcpy(block + i, name);
-        blockPtr = (Bytes2_t*)(block + i + MAX_FILENAME_SIZE + 1);
-        *blockPtr = *((Bytes2_t*)(spBlk + 4));
-        if (*blockPtr == 0)
-            return NO_MORE_SPACE;
-        writeBlock(mountedDisk, *blockPtr, block);
+        writeNextFreeBlock(currBlock, blockPtr, block);
         readBlock(mountedDisk, *blockPtr, block);
-        *((Bytes2_t*)(spBlk + 4)) = *((Bytes2_t*)(block + 2));      //Update superblock
-        block[BLOCKTYPELOC] = FILEEXTEND;
-        block[MAGICNUMLOC] = MAGICNUMBER;
-        block[2] = 0;                                               //Set blocknum to 0
-        block[3] = 0;
-        writeBlock(mountedDisk, *blockPtr, block);
+        i = FREE_DATA_START;
     }
-    else        //Needs more space for inode block
-    {
-        
-    }
-    
+    blockPtr = (Bytes2_t*)(block + i + MAX_FILENAME_SIZE + 1);
+    strcpy(block + i, name);
+    writeNextFreeBlock(currBlock, blockPtr, block);
+    registerEntry(openedFilesList, name, 0, counter);
+    return counter++;
 }
 
-int tfs_closeFile(fileDescriptor FD);
+int tfs_closeFile(fileDescriptor FD)
+{
+    if (removeEntry(openedFilesList, FD) < 0)
+        return EMPTY_LIST;
+}
 
 int tfs_writeFile(fileDescriptor FD,char *buffer, int size);
 

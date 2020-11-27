@@ -12,6 +12,10 @@ typedef int fileDescriptor;
 typedef int32_t Bytes4_t;
 typedef int16_t Bytes2_t;
 
+//Block number
+#define SUPERBLOCK_BNUM
+#define RINODE_BNUM
+
 // Block types
 #define SUPERBLOCK 1
 #define INODE 2
