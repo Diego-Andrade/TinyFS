@@ -4,12 +4,27 @@ assign specific meaning to each. Error codes must be informational only, and not
 used as status in subsequent conditionals. Create a file called tinyFS_errno.h and 
 implement the codes as a set of statically defined macros. Take a look at man 3 errno 
 on the UNIX* machines for examples of the types of errors you might catch and report. */
-#define DISK_NOT_FOUND_TO_MOUNT -2
+#include <stdio.h>
+
 #define DISK_NOT_FOUND -3
 #define INSUFFICIENT_SPACE -4
 #define FAILURE_TO_OPEN -5
-#define READ_ERROR -6
-#define WRITE_ERROR -7
+#define FILE_NOT_FOUND -6
 #define INVALID_NAME -8
-#define NO_MORE_SPACE -9
-#define EMPTY_LIST -10
+#define EMPTY_LIST -9
+
+#define BYTES_SMALLER_THAN_BLOCKSIZE -10
+#define FORMAT_ISSUE -11
+#define OUT_OF_BOUNDS -12
+#define FILE_NULL -13
+
+#define RET_ERROR(x) { \
+   int X = (x); char error[30]; \
+   if (X == DISK_NOT_FOUND) error = "DISK NOT FOUND"; \
+   else if (X == INSUFFICIENT_SPACE) error = "INSUFFICIENT SPACE"; \
+   else if (X == FAILURE_TO_OPEN) error = "FAILURE TO OPEN"; \
+   else if (X == FILE_NOT_FOUND) error = "FILE NOT FOUND"; \
+   else if (X == INVALID_NAME) error = "INVALID NAME"; \
+   else if (X == EMPTY_LIST) error = "EMPTY LIST"; \
+   fprintf(stderr, "tinyFS ERROR: %s\n", error); \
+   return X; }

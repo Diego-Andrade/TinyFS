@@ -9,8 +9,8 @@ total. This is a default size. You must be able to support different possible va
 #define MAGICNUMBER 0x44
 
 typedef int fileDescriptor;
-typedef int32_t Bytes4_t;
-typedef int16_t Bytes2_t;
+typedef signed int Bytes4_t;
+typedef signed short Bytes2_t;
 
 //Block number
 #define SUPERBLOCK_BNUM
@@ -28,14 +28,18 @@ typedef int16_t Bytes2_t;
 #define ADDRESSLOC 2    // Recommended
 #define EMPTYLOC 3      // Rec
 
-//Inode Struct
-#define FILE_ENTRY_SIZE 11
-
-//Data Byte Starts
-#define INODE_DATA_START 13
+//Byte Starts
+#define INODE_NAME_START 2
+#define INODE_SIZE_START 11
+#define INODE_BLOCKS_START 13
+#define INODE_CURSOR_START 15
+#define INODE_DATA_START 17
 #define FREE_DATA_START 2
 
 #define MAX_FILENAME_SIZE 8
+
+//Inode Struct
+#define FILE_ENTRY_SIZE (MAX_FILENAME_SIZE + 1 + 2)      //+1 for null char, +2 for the two point block numbers
 
 /* Makes a blank TinyFS file system of size nBytes on the unix file specified by 
 ‘filename’. This function should use the emulated disk library to open the specified 

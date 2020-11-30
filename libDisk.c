@@ -5,6 +5,7 @@
 #include "tinyFS.h"
 #include "libDisk.h"
 #include "linkedList.h"
+#include "tinyFS_errno.h"
 
 static LList *mountTable;
 static int disk_count = 0;
@@ -55,7 +56,7 @@ int readBlock(int disk, int bNum, void *block)
 
     file = fopen(entry->fileName, "rb");
     if (file == NULL)
-        return -1;
+        return FILE_NULL;
     if (fseek(file, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
     {
         fclose(file);
@@ -82,7 +83,7 @@ int writeBlock(int disk, int bNum, void *block)
     offset = bNum*BLOCKSIZE;
     file = fopen(entry->fileName, "rb+");
     if (file == NULL)
-        return -1;
+        return FILE_NULL;
 
     if (fseek(file, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
     {

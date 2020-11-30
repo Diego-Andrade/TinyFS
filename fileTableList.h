@@ -22,8 +22,8 @@ typedef struct
 } LList;
 
 LList *createTableList();
-void registerEntry(LList *list, char* fileName, int size, int fd);
-Node *findFileName(LList *list, int fd);
+int registerEntry(LList *list, char* fileName, int size, int fd);
+Node *findEntry_fd(LList *list, int fd);
 Node *findEntry_name(LList *list, char* filename);
 int removeEntry(LList *list, int fd);
 void printTable(LList *list);

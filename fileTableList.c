@@ -32,12 +32,12 @@ Node *makeNewNode(char* fileName, int size, int fd)
    return newNode;
 }
 
-void registerEntry(LList *list, char* fileName, int size, int fd)
+int registerEntry(LList *list, char* fileName, int size, int fd)
 {
    Node *newNode;
 
    if (list == NULL)
-      return;
+      return EMPTY_LIST;
    newNode = makeNewNode(fileName, size, fd);
    if (list->head == NULL)
    {
@@ -51,6 +51,7 @@ void registerEntry(LList *list, char* fileName, int size, int fd)
       list->tail = newNode;
    }
    list->numEntries += 1;
+   return 0;
 }
 
 int removeEntry(LList *list, int fd)
