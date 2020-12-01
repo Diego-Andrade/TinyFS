@@ -313,6 +313,8 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
     
     wBlock[BLOCKTYPELOC] = FILEEXTEND;
     wBlock[MAGICNUMBER] = MAGICNUMBER;
+
+    entry->cursor = 0;  //Reset cursor
     while (size > 0)
     {
         if (i + block + 2 > BLOCKSIZE - 2)
