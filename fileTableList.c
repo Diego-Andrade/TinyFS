@@ -27,6 +27,7 @@ Node *makeNewNode(char* fileName, int size, int fd)
       }
    newNode->fileName = (char*)malloc(strlen(fileName));
    strcpy(newNode->fileName, fileName);
+   newNode->cursor = 0;
    newNode->size = size;
    newNode->fd = fd;
    return newNode;

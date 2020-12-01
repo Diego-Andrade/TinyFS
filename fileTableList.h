@@ -9,6 +9,7 @@
 typedef struct node 
 {
    char* fileName;
+   int cursor;
    int size;
    int fd;
    struct node *nextNode;

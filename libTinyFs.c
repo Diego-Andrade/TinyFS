@@ -255,7 +255,6 @@ fileDescriptor tfs_openFile(char *name)
     strcpy(block + FREE_DATA_START, name);
     *((Bytes2_t*)(block + INODE_SIZE_START)) = 0;     //size
     *((Bytes2_t*)(block + INODE_BLOCKS_START)) = 0;     //data blocks
-    *((Bytes2_t*)(block + INODE_CURSOR_START)) = 0;     //Cursor
     *((Bytes2_t*)(block + BLOCKSIZE - 2)) = 0;     //File Extent
     if ((errorNum = writeBlock(mountedDisk, *blockPtr, block)) < 0)
         RET_ERROR(errorNum);
@@ -299,7 +298,6 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
 
     Bytes2_t *sizePtr = (Bytes2_t*)(block + INODE_SIZE_START);
     Bytes2_t *freeBlocks = (Bytes2_t*)(block + INODE_BLOCKS_START);
-    *((Bytes2_t*)(block + INODE_CURSOR_START)) = 0;
 
     int blocksNeeded = ((int)ceil(*sizePtr / (BLOCKSIZE - 2.0))) - *freeBlocks;
     if (blocksNeeded > *((Bytes2_t*)(spBlk + 2)))

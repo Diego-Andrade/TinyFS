@@ -32,8 +32,7 @@ typedef signed short Bytes2_t;
 #define INODE_NAME_START 2
 #define INODE_SIZE_START 11
 #define INODE_BLOCKS_START 13
-#define INODE_CURSOR_START 15
-#define INODE_DATA_START 17
+#define INODE_DATA_START 15
 #define FREE_DATA_START 2
 
 #define MAX_FILENAME_SIZE 8
