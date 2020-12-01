@@ -214,7 +214,7 @@ fileDescriptor tfs_openFile(char *name)
         RET_ERROR(FORMAT_ISSUE);
     i = INODE_DATA_START;
     //Searches Root Inode for File and searches fileExtent block if it exists
-    if (findFile(&i, &currBlock, &block) != NULL)
+    if (findFile(Entry->fileName, &i, &currBlock, &block) != NULL)
     {
         registerEntry(openedFilesList, name, 0, counter);
         return counter++;
@@ -231,7 +231,7 @@ fileDescriptor tfs_openFile(char *name)
         if ((errorNum = writeBlock(mountedDisk, currBlock, block)) < 0)
             RET_ERROR(errorNum);
 
-        currBlock = *blockPtr
+        currBlock = *blockPtr;
         if ((errorNum = readBlock(mountedDisk, currBlock, block)) < 0)
             RET_ERROR(errorNum);
         if (block[BLOCKTYPELOC] != FREE || block[MAGICNUMLOC] != MAGICNUMBER)
@@ -253,10 +253,10 @@ fileDescriptor tfs_openFile(char *name)
             RET_ERROR(FORMAT_ISSUE);
     block[BLOCKTYPELOC] = INODE;
     strcpy(block + FREE_DATA_START, name);
-    *((Bytes2_t)(block + INODE_SIZE_START)) = 0;     //size
-    *((Bytes2_t)(block + INODE_BLOCKS_START)) = 0;     //data blocks
-    *((Bytes2_t)(block + INODE_CURSOR_START)) = 0;     //Cursor
-    *((Bytes2_t)(block + BLOCKSIZE - 2)) = 0;     //File Extent
+    *((Bytes2_t*)(block + INODE_SIZE_START)) = 0;     //size
+    *((Bytes2_t*)(block + INODE_BLOCKS_START)) = 0;     //data blocks
+    *((Bytes2_t*)(block + INODE_CURSOR_START)) = 0;     //Cursor
+    *((Bytes2_t*)(block + BLOCKSIZE - 2)) = 0;     //File Extent
     if ((errorNum = writeBlock(mountedDisk, *blockPtr, block)) < 0)
         RET_ERROR(errorNum);
 
@@ -286,7 +286,7 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
     
     int i = INODE_DATA_START;
     currBlock = RINODE_BNUM;
-    if ((filePtr = findFile(&i, &currBlock, &block)) == NULL)
+    if ((filePtr = findFile(entry->fileName, &i, &currBlock, &block)) == NULL)
     {
         if (errorNum < 0)
             RET_ERROR(errorNum);
@@ -346,13 +346,13 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
 
         if (size < BLOCKSIZE - 2)
         {
-            memcpy(wblock + FREE_DATA_START, bufferPtr, size);
+            memcpy(wBlock + FREE_DATA_START, bufferPtr, size);
             bufferPtr += size;
             size = 0;
         }
         else
         {
-            memcpy(wblock + FREE_DATA_START, bufferPtr, BLOCKSIZE - 2);
+            memcpy(wBlock + FREE_DATA_START, bufferPtr, BLOCKSIZE - 2);
             bufferPtr += BLOCKSIZE - 2;
             size -= BLOCKSIZE - 2;
         }

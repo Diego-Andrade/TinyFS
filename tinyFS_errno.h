@@ -20,11 +20,11 @@ on the UNIX* machines for examples of the types of errors you might catch and re
 
 #define RET_ERROR(x) { \
    int X = (x); char error[30]; \
-   if (X == DISK_NOT_FOUND) error = "DISK NOT FOUND"; \
-   else if (X == INSUFFICIENT_SPACE) error = "INSUFFICIENT SPACE"; \
-   else if (X == FAILURE_TO_OPEN) error = "FAILURE TO OPEN"; \
-   else if (X == FILE_NOT_FOUND) error = "FILE NOT FOUND"; \
-   else if (X == INVALID_NAME) error = "INVALID NAME"; \
-   else if (X == EMPTY_LIST) error = "EMPTY LIST"; \
+   if (X == DISK_NOT_FOUND) strcpy(error, "DISK NOT FOUND"); \
+   else if (X == INSUFFICIENT_SPACE) strcpy(error, "INSUFFICIENT SPACE"); \
+   else if (X == FAILURE_TO_OPEN) strcpy(error, "FAILURE TO OPEN"); \
+   else if (X == FILE_NOT_FOUND) strcpy(error, "FILE NOT FOUND"); \
+   else if (X == INVALID_NAME) strcpy(error, "INVALID NAME"); \
+   else if (X == EMPTY_LIST) strcpy(error, "EMPTY LIST"); \
    fprintf(stderr, "tinyFS ERROR: %s\n", error); \
    return X; }
