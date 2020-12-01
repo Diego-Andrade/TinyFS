@@ -13,8 +13,8 @@ typedef signed int Bytes4_t;
 typedef signed short Bytes2_t;
 
 //Block number
-#define SUPERBLOCK_BNUM
-#define RINODE_BNUM
+#define SUPERBLOCK_BNUM 0
+#define RINODE_BNUM 1
 
 // Block types
 #define SUPERBLOCK 1

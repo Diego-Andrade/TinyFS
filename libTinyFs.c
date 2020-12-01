@@ -113,7 +113,7 @@ Bytes2_t* Inode_GetBlock(int8_t *byte)
 }
 
 //Updates free blocks to be file extent and update the super block
-void updateFreeBlock()
+int updateFreeBlock()
 {
     char block[BLOCKSIZE];
 
@@ -133,6 +133,7 @@ void updateFreeBlock()
     block[3] = 0;
     if ((errorNum = writeBlock(mountedDisk, oldBlockNum, block)) < 0)
         return errorNum;
+    return 0;
 }
 
 //Write next free block into a given block at destination (dest)
@@ -140,7 +141,7 @@ void updateFreeBlock()
 int writeNextFreeBlock(Bytes2_t* dest, char *block)
 {
     *dest = *((Bytes2_t*)(spBlk + 4));
-    if (*blockPtr == 0)
+    if (*dest == 0)
         return INSUFFICIENT_SPACE;
     if (updateFreeBlock() < 0)
         return errorNum;
