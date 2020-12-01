@@ -55,10 +55,8 @@ int tfs_mkfs(char *filename, int nBytes) {
     buffer[BLOCKTYPELOC] = INODE;
     buffer[MAGICNUMLOC] = MAGICNUMBER;
     buffer[2] = '/';
-    buffer[3] = '\0';                       //takes two bytes (2-10)
-    //Size
-    bytes2Ptr = (Bytes2_t)(buffer + 11);    
-    *bytes2Ptr = MAX_FILENAME_SIZE + 1 + 4;  //NameSize(9) + stats(2) + size(2)
+    buffer[3] = '\0';                       //filename takes 9 bytes (2-10)
+
     //Inode Extend is NULL at end of file (Bytes BLOCKSIZE - 2 to BLOCKSIZE - 1)
     if ((errorNum = writeBlock(d, RINODE_BNUM, buffer)) < 0)
         RET_ERROR(errorNum);
