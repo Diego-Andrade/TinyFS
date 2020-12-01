@@ -20,9 +20,9 @@ int openDisk(char *filename, int nBytes) {
     
     if (nBytes == 0 && disk_num > 0) 
         return disk_num;
-    
+
     FILE* file = fopen(filename, "rb+");
-    if (file == NULL) {
+    if (file == NULL || nBytes > 0) {
         if (nBytes < BLOCKSIZE)
             return BYTES_SMALLER_THAN_BLOCKSIZE;
 
@@ -34,7 +34,11 @@ int openDisk(char *filename, int nBytes) {
 
     struct stat sb;
     stat(filename, &sb);
-    disk_num = ++disk_count;
+    
+    if (disk_num > 0)
+        removeNode(mountTable, disk_num);
+    else
+        disk_num = ++disk_count;
     registerDisk(mountTable, disk_num, filename, (int) (sb.st_size / BLOCKSIZE));    
 
     return disk_num;
@@ -44,7 +48,10 @@ int closeDisk(int disk) {
     if (removeNode(mountTable, disk) < 0)
         return -1;
     if (mountTable->numEntries == 0)
+    {
         purgeList(mountTable);
+        mountTable = NULL;
+    }
     return 0;
 }
 

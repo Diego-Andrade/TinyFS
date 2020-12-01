@@ -17,12 +17,12 @@ LList *createTableList()
    return list;
 }
 
-Node *makeNewNode(char* fileName, int size, int fd)
+Node *makeNewEntry(char* fileName, int size, int fd)
 {
    Node *newNode;
    if((newNode = malloc(sizeof(Node))) == NULL)
       {
-         perror("makeNewNode");
+         perror("makeNewEntry");
          exit(EXIT_FAILURE);
       }
    newNode->fileName = (char*)malloc(strlen(fileName));
@@ -39,7 +39,7 @@ int registerEntry(LList *list, char* fileName, int size, int fd)
 
    if (list == NULL)
       return EMPTY_LIST;
-   newNode = makeNewNode(fileName, size, fd);
+   newNode = makeNewEntry(fileName, size, fd);
    if (list->head == NULL)
    {
       list->head = newNode;
