@@ -52,10 +52,10 @@ int tfs_mkfs(char *filename, int nBytes) {
     memset(buffer, 0, BLOCKSIZE);
     buffer[BLOCKTYPELOC] = INODE;
     buffer[MAGICNUMLOC] = MAGICNUMBER;
-    buffer[INODE_NAME_START] = '/';
-    buffer[INODE_NAME_START - 1] = '\0';                       //filename takes 9 bytes (2-10)
     buffer[INODE_SIZE_START] = 0;
     buffer[INODE_SIZE_START + 1] = 0;
+    buffer[INODE_NAME_START] = '/';
+    buffer[INODE_NAME_START + 1] = '\0';                       //filename takes 9 bytes (4-12)
 
     //Inode Extend is NULL at end of file (Bytes BLOCKSIZE - 2 to BLOCKSIZE - 1)
     if ((errorNum = writeBlock(d, RINODE_BNUM, buffer)) < 0)
@@ -160,12 +160,13 @@ char *findFile(char *name, int *freeEntry, Bytes2_t *currBlock, char *block)
     }
 
     filesToFind = *num_files;
+    *freeEntry = i;
 
     while(filesToFind > 0)                     //Assumes filename cannot not be NULL
     {
         if (block[i] == '\0')       //Empty Entry
         {
-            if (*freeEntry == 0)
+            if (*freeEntry == INODE_DATA_START)
                 *freeEntry = i;
         }
         else 
@@ -330,21 +331,6 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
     entry->size = 0;
     while (size > 0)
     {
-        if (i + 2 - 1 > BLOCKSIZE - 2)
-        {       //Create file extent for inode if file needs more blocks
-            blockPtr = (Bytes2_t*)(block + BLOCKSIZE - 2);
-            if ((errorNum = writeNextFreeBlock(blockPtr, block)) < 0)
-                RET_ERROR(errorNum);
-            if ((errorNum = writeBlock(mountedDisk, currBlock, block)) < 0)
-                RET_ERROR(errorNum);
-            currBlock = *blockPtr;
-            if ((errorNum = readBlock(mountedDisk, currBlock, block)) < 0)
-                RET_ERROR(errorNum);
-            if (block[BLOCKTYPELOC] != FILEEXTEND || block[MAGICNUMLOC] != MAGICNUMBER)
-                RET_ERROR(FORMAT_ISSUE);
-            i = FREE_DATA_START;
-        }
-
         blockPtr = (Bytes2_t*)(block + i);
         if (blockCounter <= 0)
         {   //get free block
@@ -372,6 +358,20 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
         }
         if ((errorNum = writeBlock(mountedDisk, *blockPtr, wBlock)) < 0)        //Write to data block
             RET_ERROR(errorNum);
+        if (i + 2 - 1 > BLOCKSIZE - 2)
+        {       //Create file extent for inode if file needs more blocks
+            blockPtr = (Bytes2_t*)(block + BLOCKSIZE - 2);
+            if ((errorNum = writeNextFreeBlock(blockPtr, block)) < 0)
+                RET_ERROR(errorNum);
+            if ((errorNum = writeBlock(mountedDisk, currBlock, block)) < 0)
+                RET_ERROR(errorNum);
+            currBlock = *blockPtr;
+            if ((errorNum = readBlock(mountedDisk, currBlock, block)) < 0)
+                RET_ERROR(errorNum);
+            if (block[BLOCKTYPELOC] != FILEEXTEND || block[MAGICNUMLOC] != MAGICNUMBER)
+                RET_ERROR(FORMAT_ISSUE);
+            i = FREE_DATA_START;
+        }
         i += 2;                                                                 //Size of blockNum
     }
     if (currBlock == bNum)
