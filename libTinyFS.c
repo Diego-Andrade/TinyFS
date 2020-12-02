@@ -357,7 +357,7 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
     char wBlock[BLOCKSIZE];
     
     wBlock[BLOCKTYPELOC] = FILEEXTEND;
-    wBlock[MAGICNUMBER] = MAGICNUMBER;
+    wBlock[MAGICNUMLOC] = MAGICNUMBER;
 
     entry->cursor = 0;  //Reset cursor
     entry->size = 0;
@@ -373,7 +373,7 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
         else
             blockCounter -= 1;
         
-        memset(wBlock + FREE_DATA_START, 0, BLOCKSIZE);         // Delete only data portion and not format
+        memset(wBlock + FREE_DATA_START, 0, BLOCKSIZE - FREE_DATA_START);         // Delete only data portion and not format
         if (size < FE_MAX_DATA)
         {
             memcpy(wBlock + FREE_DATA_START, bufferPtr, size);
