@@ -17,7 +17,7 @@
 // Superblock
 #define SUPER_TYPE 1
 #define SUPER_FREE_LIST 2  
-#define SUPER_FREE_COUNT ((SUPER_FREE_LIST + sizeof(Blocknum));  // Next item after free list link, which is blocknum size
+#define SUPER_FREE_COUNT (SUPER_FREE_LIST + sizeof(Blocknum))  // Next item after free list link, which is blocknum size
 
 //Inode Struct
 #define INODE_TYPE 2
