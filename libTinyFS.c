@@ -24,7 +24,7 @@ int tfs_mkfs(char *filename, int nBytes) {
 
     if (d < 0) RET_ERROR(FAILURE_TO_OPEN);                   // Failed to open disk
 
-    int num_blocks = (int)floor((nBytes*1.0) / (BLOCKSIZE - 2));
+    int num_blocks = nBytes / BLOCKSIZE;
 
     if (num_blocks < 0) RET_ERROR(INSUFFICIENT_SPACE);
 
