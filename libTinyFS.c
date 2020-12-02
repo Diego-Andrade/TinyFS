@@ -24,7 +24,11 @@ int tfs_mkfs(char *filename, int nBytes) {
 
     if (d < 0) RET_ERROR(FAILURE_TO_OPEN);                   // Failed to open disk
 
+<<<<<<< HEAD
     int num_blocks = nBytes / BLOCKSIZE;                    // Truncate to nearest block size
+=======
+    int num_blocks = nBytes / BLOCKSIZE;
+>>>>>>> 9fa17120aa7a6b8ce3801a044d1d9175886b3ef7
 
     if (num_blocks < 0) RET_ERROR(INSUFFICIENT_SPACE);
 
