@@ -6,27 +6,30 @@
 #include <string.h>
 #include <unistd.h>
 
-typedef struct node 
+#include "tinyFS.h"
+
+typedef struct  
 {
-   char* fileName;
-   int cursor;
-   int size;
-   int fd;
-   struct node *nextNode;
-} Node;
+   char* fileName;   // Name of file
+   Bytes2_t inode;   // Block number of inode
+   int cursor;       // Current file ptr location in file
+   int size;         
+   int fd;           // Index in FileTable
+   struct FileEntry *next;  
+} FileEntry;
 
 typedef struct
 {
-   Node *head;
-   Node *tail;
+   FileEntry *head;
+   FileEntry *tail;
    int numEntries;
-} LList;
+} FileTable;
 
-LList *createTableList();
-int registerEntry(LList *list, char* fileName, int size, int fd);
-Node *findEntry_fd(LList *list, int fd);
-Node *findEntry_name(LList *list, char* filename);
-int removeEntry(LList *list, int fd);
-void printTable(LList *list);
-void purgeTable(LList *list);
+FileTable *createFileTable();
+int registerEntry(FileTable *table, char* fileName, Bytes2_t inode, int size, int fd);
+FileEntry *findEntry_fd(FileTable *table, int fd);
+FileEntry *findEntry_name(FileTable *table, char* filename);
+int removeEntry(FileTable *table, int fd);
+void printTable(FileTable *table);
+void purgeTable(FileTable *table);
 #endif

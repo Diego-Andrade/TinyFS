@@ -2,11 +2,11 @@
 
 #define EMPTY_LIST -6
 
-LList *createTableList()
+FileTable *createFileTable()
 {
-   LList *list;
+   FileTable *list;
 
-   if ((list = malloc(sizeof(LList))) == NULL)
+   if ((list = malloc(sizeof(FileTable))) == NULL)
    {
       perror("LinkedList");
       exit(EXIT_FAILURE);
@@ -17,29 +17,30 @@ LList *createTableList()
    return list;
 }
 
-Node *makeNewEntry(char* fileName, int size, int fd)
+FileEntry *makeNewEntry(char* fileName, Bytes2_t inode, int size, int fd)
 {
-   Node *newNode;
-   if((newNode = malloc(sizeof(Node))) == NULL)
+   FileEntry *newNode;
+   if((newNode = malloc(sizeof(FileEntry))) == NULL)
       {
          perror("makeNewEntry");
          exit(EXIT_FAILURE);
       }
    newNode->fileName = (char*)malloc(strlen(fileName));
    strcpy(newNode->fileName, fileName);
+   newNode->inode = inode;
    newNode->cursor = 0;
    newNode->size = size;
    newNode->fd = fd;
    return newNode;
 }
 
-int registerEntry(LList *list, char* fileName, int size, int fd)
+int registerEntry(FileTable *list, char* fileName, Bytes2_t inode, int size, int fd)
 {
-   Node *newNode;
+   FileEntry *newNode;
 
    if (list == NULL)
       return EMPTY_LIST;
-   newNode = makeNewEntry(fileName, size, fd);
+   newNode = makeNewEntry(fileName, inode, size, fd);
    if (list->head == NULL)
    {
       list->head = newNode;
@@ -47,18 +48,18 @@ int registerEntry(LList *list, char* fileName, int size, int fd)
    }
    else
    {
-      list->tail->nextNode = newNode;
-      newNode->nextNode = list->head;
+      list->tail->next = newNode;
+      newNode->next = list->head;
       list->tail = newNode;
    }
    list->numEntries += 1;
    return 0;
 }
 
-int removeEntry(LList *list, int fd)
+int removeEntry(FileTable *list, int fd)
 {
-   Node *prevNode;
-   Node *currNode;
+   FileEntry *prevNode;
+   FileEntry *currNode;
 
    if (list == NULL || list->head == NULL)
       return EMPTY_LIST;
@@ -67,7 +68,7 @@ int removeEntry(LList *list, int fd)
    while (currNode->fd != fd && currNode != list->tail)
    {
       prevNode = currNode;
-      currNode = currNode->nextNode;
+      currNode = currNode->next;
    }
    if (currNode->fd == fd)
    {
@@ -77,9 +78,9 @@ int removeEntry(LList *list, int fd)
          list->head = NULL;
       }
       else
-         prevNode->nextNode = currNode->nextNode;
+         prevNode->next = currNode->next;
       if (currNode == list->head)
-         list->head = currNode->nextNode;
+         list->head = currNode->next;
       else if (currNode == list->tail)
          list->tail = prevNode;
       free(currNode->fileName);
@@ -90,9 +91,9 @@ int removeEntry(LList *list, int fd)
    return -1;
 }
 
-void printTable(LList *list)
+void printTable(FileTable *list)
 {
-   Node *currNode;
+   FileEntry *currNode;
    int fullRound = 0;
    if (list == NULL || list->head == NULL)
    {
@@ -103,17 +104,17 @@ void printTable(LList *list)
    while (!fullRound)
    {
       printf("(%s,%d)->", currNode->fileName, currNode->fd);
-      currNode = currNode->nextNode;
+      currNode = currNode->next;
       if (currNode == list->head)
          fullRound = 1;
    }
    printf("\n");
 }
 
-void purgeTable(LList *list)
+void purgeTable(FileTable *list)
 {
-   Node *prevNode;
-   Node *currNode;
+   FileEntry *prevNode;
+   FileEntry *currNode;
 
    if (list == NULL)
       return;
@@ -121,7 +122,7 @@ void purgeTable(LList *list)
    prevNode = list->head;
    while(currNode != list->tail)
    {
-      currNode = currNode->nextNode;
+      currNode = currNode->next;
       free(prevNode->fileName);
       free(prevNode);
       prevNode = currNode;
@@ -134,29 +135,29 @@ void purgeTable(LList *list)
    free(list);
 }
 
-Node *findEntry_fd(LList *list, int fd)
+FileEntry *findEntry_fd(FileTable *list, int fd)
 {
-   Node *currNode;
+   FileEntry *currNode;
 
    if (list == NULL)
       return NULL;
    currNode = list->head;
    while(currNode != list->tail && currNode->fd != fd)
-      currNode = currNode->nextNode;
+      currNode = currNode->next;
    if (currNode->fd == fd)
       return currNode;
    return NULL;
 }
 
-Node *findEntry_name(LList *list, char* filename)
+FileEntry *findEntry_name(FileTable *list, char* filename)
 {
-   Node *currNode;
+   FileEntry *currNode;
 
    if (list == NULL || list->head == NULL)
       return NULL;
    currNode = list->head;
    while(currNode != list->tail && strcmp(currNode->fileName, filename) != 0)
-      currNode = currNode->nextNode;
+      currNode = currNode->next;
    if (strcmp(currNode->fileName, filename) == 0)
       return currNode;
    return NULL;
