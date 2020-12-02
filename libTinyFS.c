@@ -24,7 +24,7 @@ int tfs_mkfs(char *filename, int nBytes) {
 
     if (d < 0) RET_ERROR(FAILURE_TO_OPEN);                   // Failed to open disk
 
-    int num_blocks = (int)floor((nBytes*1.0) / (BLOCKSIZE - 2));
+    int num_blocks = nBytes / BLOCKSIZE;                    // Truncate to nearest block size
 
     if (num_blocks < 0) RET_ERROR(INSUFFICIENT_SPACE);
 
@@ -145,7 +145,7 @@ int writeNextFreeBlock(Bytes2_t* dest, char *block)
 char *findFile(char *name, int *freeEntry, Bytes2_t *currBlock, char *block)
 {
     Bytes2_t *fileExtent = (Bytes2_t*)(block + INODE_EXTEND);
-    Bytes2_t *num_files = block + INODE_SIZE_START;
+    Bytes2_t *num_files = (Bytes2_t*) (block + INODE_SIZE_START);
     Bytes2_t filesToFind;
     int i = INODE_DATA_START;
     *freeEntry = 0;
@@ -224,7 +224,7 @@ fileDescriptor tfs_openFile(char *name)
     //Searches Root Inode for File and searches fileExtent block if it exists
     if ((fileLocation = findFile(name, &newFileLocation, &currBlock, block)) != NULL)
     {
-        registerEntry(openedFilesList, name, (Bytes2_t)(fileLocation + MAX_FILENAME_SIZE + 1),0, counter);
+        registerEntry(openedFilesList, name, (Blocknum)(fileLocation + MAX_FILENAME_SIZE + 1),0, counter);
         return counter++;
     }
     if (errorNum < 0)           //Check if an error occured during FindFile

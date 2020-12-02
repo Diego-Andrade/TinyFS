@@ -34,7 +34,7 @@ FileEntry *makeNewEntry(char* fileName, Bytes2_t inode, int size, int fd)
    return newNode;
 }
 
-int registerEntry(FileTable *list, char* fileName, Bytes2_t inode, int size, int fd)
+int registerEntry(FileTable *list, char* fileName, Blocknum inode, int size, int fd)
 {
    FileEntry *newNode;
 

@@ -26,7 +26,7 @@ typedef struct
 } FileTable;
 
 FileTable *createFileTable();
-int registerEntry(FileTable *table, char* fileName, Bytes2_t inode, int size, int fd);
+int registerEntry(FileTable *table, char* fileName, Blocknum inode, int size, int fd);
 FileEntry *findEntry_fd(FileTable *table, int fd);
 FileEntry *findEntry_name(FileTable *table, char* filename);
 int removeEntry(FileTable *table, int fd);
