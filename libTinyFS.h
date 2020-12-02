@@ -14,7 +14,13 @@
 #define BLOCKTYPELOC 0  // Required
 #define MAGICNUMLOC 1   // Req
 
+// Superblock
+#define SUPER_TYPE 1
+#define SUPER_FREE_LIST 2  
+#define SUPER_FREE_COUNT (SUPER_FREE_LIST + sizeof(Blocknum));  // Next item after free list link, which is blocknum size
+
 //Inode Struct
+#define INODE_TYPE 2
 #define INODE_NAME_START 2
 #define INODE_SIZE_START 11
 #define INODE_BLOCKS_START 13
@@ -28,10 +34,12 @@
 #define FILE_ENTRY_SIZE (MAX_FILENAME_SIZE + 1 + 2)      //+1 for null char, +2 for the two point block numbers
 
 // File Extend
+#define FE_TYPE 3
 #define FE_DATA 2                               // Start of data 
 #define FE_MAX_DATA (BLOCKSIZE - FE_DATA)       // Max storable amount of data
 
 // Free 
+#define FREE_TYPE 4
 #define FREE_DATA_START 2
 
 
