@@ -14,7 +14,7 @@ char* mountedDiskName;
 unsigned char spBlk[BLOCKSIZE];
 
 //TinyFs Vars
-LList *openedFilesList;
+FileTable *openedFilesList;
 int counter = 0;
 int errorNum = 0;
 
@@ -88,7 +88,7 @@ int tfs_mount(char *diskname) {
     mountedDisk = openDisk(diskname, 0);
     if (mountedDisk < 0)
         return DISK_NOT_FOUND;
-    openedFilesList = createTableList();
+    openedFilesList = createFileTable();
     mountedDiskName = diskname;
     if ((errorNum = readBlock(mountedDisk, SUPERBLOCK_BNUM, spBlk)) < 0)
         RET_ERROR(errorNum);
@@ -187,7 +187,7 @@ char *findFile(char *name, int *i, Bytes2_t *currBlock, char *block)
 
 fileDescriptor tfs_openFile(char *name)
 {
-    Node *Entry;
+    FileEntry *Entry;
     int i;
     Bytes2_t currBlock;
     int fileExtent;
@@ -212,11 +212,15 @@ fileDescriptor tfs_openFile(char *name)
         RET_ERROR(FORMAT_ISSUE);
     i = INODE_DATA_START;
     //Searches Root Inode for File and searches fileExtent block if it exists
-    if (findFile(name, &i, &currBlock, block) != NULL)
+    int file_inode = findFile(name, &i, &currBlock, block);
+
+    if (file_inode > 0)
     {
-        registerEntry(openedFilesList, name, 0, counter);
+        registerEntry(openedFilesList, name, file_inode, 0, counter);
         return counter++;
     }
+
+    // TODO: what is this checking?
     if (errorNum < 0)
         RET_ERROR(errorNum);
     
@@ -256,7 +260,7 @@ fileDescriptor tfs_openFile(char *name)
     if ((errorNum = writeBlock(mountedDisk, *blockPtr, block)) < 0)
         RET_ERROR(errorNum);
 
-    registerEntry(openedFilesList, name, 0, counter);
+    registerEntry(openedFilesList, name, *blockPtr, 0, counter);
     return counter++;
 }
 
@@ -269,7 +273,7 @@ int tfs_closeFile(fileDescriptor FD)
 
 int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
 {
-    Node *entry;
+    FileEntry *entry;
     Bytes2_t currBlock;
     char *filePtr;
     char block[BLOCKSIZE];
@@ -377,6 +381,77 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
 
 int tfs_deleteFile(fileDescriptor FD);
 
-int tfs_readByte(fileDescriptor FD, char *buffer);
+/** HELPER: Returns the physical block number of logical file extend block,  
+ *  or -1 if failed
+**/
+Blocknum get_file_extend(char* inode, Blocknum file_ext) {
+    Blocknum* fe_list; 
 
-int tfs_seek(fileDescriptor FD, int offset);
+    // File extend found on Inode
+    if (file_ext <= INODE_MAX_FE) {
+        fe_list = (Blocknum*) (inode + INODE_FE_LIST);          // Get pointer to start of fe list
+        return fe_list[file_ext];
+    }
+
+    // File extend on inode extend blocks
+    int num_of_ext = 1;
+    file_ext -= INODE_MAX_FE;                                   // Removed amount of FE checked in inode
+    
+    num_of_ext += file_ext / (FE_MAX_DATA / sizeof(Blocknum));   // Calculate num of extend blocks from inode
+    file_ext = file_ext % (FE_MAX_DATA / sizeof(Blocknum));
+
+    if (file_ext == 0) 
+        num_of_ext -= 1;     // File extend found at end of last inode extend
+
+    for ( ; num_of_ext > 0; num_of_ext--) {
+        if (readBlock(mountedDisk, inode[INODE_EXTEND], inode) < 0) 
+            RET_ERROR(FAILED_TO_READ);
+    }
+    
+    fe_list = (Blocknum*) (inode + FE_DATA);          // Get pointer to start of fe list, using fe block
+    return fe_list[file_ext];
+}
+
+int tfs_readByte(fileDescriptor FD, char *buffer) {
+    FileEntry* entry = findEntry_fd(openedFilesList, FD);
+    
+    // Open file check
+    if (entry <= 0) 
+        RET_ERROR(INVALID_FD);
+
+    // EOF check
+    if (entry->cursor == entry->size)
+        RET_ERROR(TFS_EOF);
+
+    char tempBlock[BLOCKSIZE];
+    if (readBlock(mountedDisk, entry->inode, &tempBlock) < 0)   // Read inode data
+        RET_ERROR(FAILED_TO_READ);
+
+    // Find block that contains requested data
+    Blocknum file_ext = entry->cursor / FE_MAX_DATA;    // logical block that fp is at. logblk = cur / data per fe blk
+    int loc      = entry->cursor % FE_MAX_DATA;         // Location of fp in file extend
+
+    Blocknum physical_block = get_file_extend(tempBlock, file_ext); 
+    if (physical_block <= 0)
+        RET_ERROR(FAILED_TO_READ);
+
+    if (readBlock(mountedDisk, physical_block, &tempBlock) < 0)
+        RET_ERROR(FAILED_TO_READ);
+    
+    *buffer = tempBlock[FE_DATA + loc];     // Load buffer with requested Byte
+    entry->cursor++;                        // Advance fp once read
+    return 0;
+}
+
+int tfs_seek(fileDescriptor FD, int offset) {
+    FileEntry* entry = findEntry_fd(openedFilesList, FD);
+    if (entry <= 0) 
+        RET_ERROR(INVALID_FD);
+
+    int new_loc = entry->cursor + offset;
+    if (new_loc > entry->size || new_loc < 0)   /** TODO: Potentiallay allow past 0 but trunc to 0 **/
+        RET_ERROR(INVALID_FILE_OFFSET);
+
+    entry->cursor = new_loc;
+    return 0;
+}

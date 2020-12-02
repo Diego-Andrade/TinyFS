@@ -1,18 +1,6 @@
-/* Your program should use a 10240 Byte disk size giving you 40 blocks 
-total. This is a default size. You must be able to support different possible values */
-#define DEFAULT_DISK_SIZE 10240 
 
-/* use this name for a default disk file name */
-#define DEFAULT_DISK_NAME "tinyFSDisk" 	
 
-// Used to identify formating
-#define MAGICNUMBER 0x44
-
-typedef int fileDescriptor;
-typedef signed int Bytes4_t;
-typedef signed short Bytes2_t;
-
-//Block number
+// Reserved disk block numbers
 #define SUPERBLOCK_BNUM 0
 #define RINODE_BNUM 1
 
@@ -22,23 +10,30 @@ typedef signed short Bytes2_t;
 #define FILEEXTEND 3
 #define FREE 4
 
-// Block format
+// General block format
 #define BLOCKTYPELOC 0  // Required
 #define MAGICNUMLOC 1   // Req
-#define ADDRESSLOC 2    // Recommended
-#define EMPTYLOC 3      // Rec
 
-//Byte Starts
+//Inode Struct
 #define INODE_NAME_START 2
 #define INODE_SIZE_START 11
 #define INODE_BLOCKS_START 13
 #define INODE_DATA_START 15
+
+#define INODE_FE_LIST 15
+#define INODE_EXTEND (BLOCKSIZE - sizeof(Blocknum))
+#define INODE_MAX_FE ((INODE_EXTEND - INODE_FE_LIST) / sizeof(Blocknum))
+
+// Root Inode
+#define FILE_ENTRY_SIZE (MAX_FILENAME_SIZE + 1 + 2)      //+1 for null char, +2 for the two point block numbers
+
+// File Extend
+#define FE_DATA 2                               // Start of data 
+#define FE_MAX_DATA (BLOCKSIZE - FE_DATA)       // Max storable amount of data
+
+// Free 
 #define FREE_DATA_START 2
 
-#define MAX_FILENAME_SIZE 8
-
-//Inode Struct
-#define FILE_ENTRY_SIZE (MAX_FILENAME_SIZE + 1 + 2)      //+1 for null char, +2 for the two point block numbers
 
 /* Makes a blank TinyFS file system of size nBytes on the unix file specified by 
 ‘filename’. This function should use the emulated disk library to open the specified 

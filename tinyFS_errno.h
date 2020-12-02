@@ -18,6 +18,11 @@ on the UNIX* machines for examples of the types of errors you might catch and re
    else if (X == FORMAT_ISSUE) strcpy(error, "FORMAT ISSUE");\
    else if (X == OUT_OF_BOUNDS) strcpy(error, "OUT OF BOUNDS");\
    else if (X == FILE_NULL) strcpy(error, "FILE NULL");\
+   else if (X == INVALID_FD) strcpy(error, "INVALID FILE DESCRIPTOR");\
+   else if (X == INVALID_FILE_OFFSET) strcpy(error, "INVALID FILE OFFSET");\
+   else if (X == FAILED_TO_READ) strcpy(error, "UNABLE TO READ FILE");\
+   else if (X == TFS_EOF) strcpy(error, "ATTEMPED TO READ PAST FILE");\
+   else strcpy(error, "UNKNOWN ERROR - ");\
    fprintf(stderr, "tinyFS ERROR: %s\n", error); fflush(stderr);\
    return X; }
 
@@ -32,4 +37,9 @@ on the UNIX* machines for examples of the types of errors you might catch and re
 #define FORMAT_ISSUE -11
 #define OUT_OF_BOUNDS -12
 #define FILE_NULL -13
+#define INVALID_FD -14
+#define INVALID_FILE_OFFSET -15
+
+#define FAILED_TO_READ -16
+#define TFS_EOF -17
 
