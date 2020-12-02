@@ -95,7 +95,7 @@ int writeBlock(int disk, int bNum, void *block)
     if (fseek(file, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
     {
         fclose(file);
-        return -1;
+        return BLOCK_WRITE_FAILED;
     }
     if (fwrite(block, BLOCKSIZE, 1, file) < 1)
     {

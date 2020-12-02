@@ -54,6 +54,8 @@ int tfs_mkfs(char *filename, int nBytes) {
     buffer[MAGICNUMLOC] = MAGICNUMBER;
     buffer[INODE_NAME_START] = '/';
     buffer[INODE_NAME_START - 1] = '\0';                       //filename takes 9 bytes (2-10)
+    buffer[INODE_SIZE_START] = 0;
+    buffer[INODE_SIZE_START + 1] = 0;
 
     //Inode Extend is NULL at end of file (Bytes BLOCKSIZE - 2 to BLOCKSIZE - 1)
     if ((errorNum = writeBlock(d, RINODE_BNUM, buffer)) < 0)
@@ -224,7 +226,7 @@ fileDescriptor tfs_openFile(char *name)
     //Searches Root Inode for File and searches fileExtent block if it exists
     if ((fileLocation = findFile(name, &newFileLocation, &currBlock, block)) != NULL)
     {
-        registerEntry(openedFilesList, name, (Blocknum)(fileLocation + MAX_FILENAME_SIZE + 1),0, counter);
+        registerEntry(openedFilesList, name, *((Blocknum*)(fileLocation + MAX_FILENAME_SIZE + 1)),0, counter);
         return counter++;
     }
     if (errorNum < 0)           //Check if an error occured during FindFile

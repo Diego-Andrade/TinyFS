@@ -139,7 +139,7 @@ FileEntry *findEntry_fd(FileTable *list, int fd)
 {
    FileEntry *currNode;
 
-   if (list == NULL)
+   if (list == NULL || list->head == NULL)
       return NULL;
    currNode = list->head;
    while(currNode != list->tail && currNode->fd != fd)
