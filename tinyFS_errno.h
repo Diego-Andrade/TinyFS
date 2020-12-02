@@ -42,4 +42,4 @@ on the UNIX* machines for examples of the types of errors you might catch and re
 
 #define FAILED_TO_READ -16
 #define TFS_EOF -17
-
+#define BLOCK_WRITE_FAILED -18

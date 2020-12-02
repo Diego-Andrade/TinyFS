@@ -220,8 +220,7 @@ fileDescriptor tfs_openFile(char *name)
         return counter++;
     }
 
-    // TODO: what is this checking?
-    if (errorNum < 0)
+    if (errorNum < 0)           /** TODO: what is this checking? **/
         RET_ERROR(errorNum);
     
     //Create a New File
@@ -379,10 +378,75 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
     }
 }
 
-int tfs_deleteFile(fileDescriptor FD);
+/** HELPER: Removes file entry from table **/
+int removed_file_entry(fileDescriptor FD) {
 
-/** HELPER: Returns the physical block number of logical file extend block,  
- *  or -1 if failed
+    return 0;
+}
+
+/** HELPER: Erases a give block and adds to free block list **/
+int free_block(Blocknum bNum) {
+
+    return 0;
+}
+
+int tfs_deleteFile(fileDescriptor FD) {
+    FileEntry* entry = findEntry_fd(openedFilesList, FD);
+    
+    // Open file check
+    if (entry <= 0) 
+        RET_ERROR(INVALID_FD);
+
+    char inode[BLOCKSIZE];
+    if (readBlock(mountedDisk, entry->inode, inode) < 0) 
+            RET_ERROR(FAILED_TO_READ);
+
+    // Erase data blocks
+    int total_data_blks = entry->size / FE_MAX_DATA;        // Number of File Extend data blocks to free
+    if (entry->size % FE_MAX_DATA > 0)
+        total_data_blks += 1;
+    
+    for (int i = 0; i < total_data_blks - 1; i++) {         // file extends are 0 based
+        Blocknum to_erase = get_file_extend(inode, i);
+        if (free_block(to_erase) < 0)
+            RET_ERROR(BLOCK_WRITE_FAILED);
+    }
+
+    // Erase inode extends
+    int num_of_inode_extends = 0;
+    if (total_data_blks > INODE_MAX_FE) {
+        int extra_data_blocks = total_data_blks - INODE_MAX_FE;         // Number of data block ptrs that didn't fit in inode
+        num_of_inode_extends += extra_data_blocks / (FE_MAX_DATA / sizeof(BLOCKSIZE));
+
+        if (extra_data_blocks % (FE_MAX_DATA / sizeof(BLOCKSIZE)) > 0)  // Count the extra block needed to store left over
+            num_of_inode_extends += 1;
+    }
+
+    if (num_of_inode_extends != 0) {
+        for (int i = num_of_inode_extends - 1; i > 0; i--) {
+            for (int j = 0; j < i; j++) {
+                if (readBlock(mountedDisk, inode[INODE_EXTEND], inode) < 0) 
+                    RET_ERROR(FAILED_TO_READ);
+            }
+
+            free_block(inode[INODE_EXTEND]);
+            if (readBlock(mountedDisk, entry->inode, inode) < 0) 
+                RET_ERROR(FAILED_TO_READ);
+        }
+        
+        free_block(inode[INODE_EXTEND]);
+    } 
+
+    // Erase inode
+    if (free_block(entry->inode) < 0)
+            RET_ERROR(BLOCK_WRITE_FAILED);
+
+    // Erase filetable entry
+    removed_file_entry(FD);
+}
+
+/** HELPER: Get the physical block number of logical file_ext block  
+ *  Return: physical block number or error code
 **/
 Blocknum get_file_extend(char* inode, Blocknum file_ext) {
     Blocknum* fe_list; 
@@ -397,18 +461,18 @@ Blocknum get_file_extend(char* inode, Blocknum file_ext) {
     int num_of_ext = 1;
     file_ext -= INODE_MAX_FE;                                   // Removed amount of FE checked in inode
     
-    num_of_ext += file_ext / (FE_MAX_DATA / sizeof(Blocknum));   // Calculate num of extend blocks from inode
+    num_of_ext += file_ext / (FE_MAX_DATA / sizeof(Blocknum));  // Calculate num of extend blocks from inode
     file_ext = file_ext % (FE_MAX_DATA / sizeof(Blocknum));
 
+    // Is file extend at end of last inode extend?
     if (file_ext == 0) 
-        num_of_ext -= 1;     // File extend found at end of last inode extend
+        num_of_ext -= 1;     
 
-    for ( ; num_of_ext > 0; num_of_ext--) {
+    for ( ; num_of_ext > 0; num_of_ext--) 
         if (readBlock(mountedDisk, inode[INODE_EXTEND], inode) < 0) 
             RET_ERROR(FAILED_TO_READ);
-    }
     
-    fe_list = (Blocknum*) (inode + FE_DATA);          // Get pointer to start of fe list, using fe block
+    fe_list = (Blocknum*) (inode + FE_DATA);                    // Get pointer to start of fe list, using fe block
     return fe_list[file_ext];
 }
 
@@ -424,7 +488,7 @@ int tfs_readByte(fileDescriptor FD, char *buffer) {
         RET_ERROR(TFS_EOF);
 
     char tempBlock[BLOCKSIZE];
-    if (readBlock(mountedDisk, entry->inode, &tempBlock) < 0)   // Read inode data
+    if (readBlock(mountedDisk, entry->inode, tempBlock) < 0)   // Read inode data
         RET_ERROR(FAILED_TO_READ);
 
     // Find block that contains requested data
@@ -435,7 +499,7 @@ int tfs_readByte(fileDescriptor FD, char *buffer) {
     if (physical_block <= 0)
         RET_ERROR(FAILED_TO_READ);
 
-    if (readBlock(mountedDisk, physical_block, &tempBlock) < 0)
+    if (readBlock(mountedDisk, physical_block, tempBlock) < 0)
         RET_ERROR(FAILED_TO_READ);
     
     *buffer = tempBlock[FE_DATA + loc];     // Load buffer with requested Byte

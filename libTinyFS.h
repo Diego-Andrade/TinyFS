@@ -1,4 +1,4 @@
-
+#include "tinyFS.h"
 
 // Reserved disk block numbers
 #define SUPERBLOCK_BNUM 0
