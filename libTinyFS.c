@@ -243,7 +243,10 @@ fileDescriptor tfs_openFile(char *name)
     //Searches Root Inode for File and searches fileExtent block if it exists
     if ((fileLocation = findFile(name, &currBlock, block)) != NULL)
     {
-        registerEntry(openedFilesList, name, *((Blocknum*)(fileLocation + MAX_FILENAME_SIZE + 1)),0, counter);
+        Blocknum bnum = *((Blocknum*)(fileLocation + MAX_FILENAME_SIZE + 1));
+        if ((errorNum = readBlock(mountedDisk, currBlock, block)) < 0)
+            RET_ERROR(errorNum);
+        registerEntry(openedFilesList, name, bnum, *((Blocknum*)(block + INODE_SIZE_START)), counter);
         return counter++;
     }
     if (errorNum < 0)           //Check if an error occured during FindFile
