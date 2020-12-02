@@ -160,13 +160,12 @@ char *findFile(char *name, int *freeEntry, Bytes2_t *currBlock, char *block)
     }
 
     filesToFind = *num_files;
-    *freeEntry = i;
 
     while(filesToFind > 0)                     //Assumes filename cannot not be NULL
     {
         if (block[i] == '\0')       //Empty Entry
         {
-            if (*freeEntry == INODE_DATA_START)
+            if (*freeEntry == 0)
                 *freeEntry = i;
         }
         else 
@@ -194,6 +193,8 @@ char *findFile(char *name, int *freeEntry, Bytes2_t *currBlock, char *block)
         }
         i += FILE_ENTRY_SIZE;
     }
+    if (*freeEntry == 0)
+        *freeEntry = INODE_DATA_START;
     return NULL;
 }
 
@@ -290,7 +291,7 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
     char *bufferPtr = buffer;
     int i;
 
-    if ((entry = findEntry_fd(openedFilesList, FD)) < 0)
+    if ((entry = findEntry_fd(openedFilesList, FD)) == NULL)
         RET_ERROR(FAILURE_TO_OPEN);
     if ((errorNum = readBlock(mountedDisk, RINODE_BNUM, block)) < 0)
         RET_ERROR(errorNum);
