@@ -8,7 +8,7 @@
 
 #include "tinyFS.h"
 
-typedef struct  
+typedef struct FileEntry 
 {
    char* fileName;   // Name of file
    Bytes2_t inode;   // Block number of inode
@@ -18,7 +18,7 @@ typedef struct
    struct FileEntry *next;  
 } FileEntry;
 
-typedef struct
+typedef struct FileTable
 {
    FileEntry *head;
    FileEntry *tail;

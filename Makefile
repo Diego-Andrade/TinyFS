@@ -1,16 +1,25 @@
 CC = gcc
 FLAGS = -Wall -g
 PROG = tinyFSDemo
-OBJS = tinyFSDemo.o libTinyFS.o libDisk.o
+OBJS = tinyFSDemo.o libTinyFS.o libDisk.o linkedList.o fileTableList.o
 
 $(PROG): $(OBJS) 
 	$(CC) $(CFLAGS) -o $(PROG) $(OBJS)
 
-tinyFSDemo.o: tinyFSDemo.c libTinyFS.h tinyFS.h TinyFS_errno.h
+tinyFSDemo.o: tinyFSDemo.c libTinyFS.o 
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-libTinyFS.o: libTinyFS.c libTinyFS.h tinyFS.h libDisk.h libDisk.o TinyFS_errno.h
+libTinyFS.o: libTinyFS.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-libDisk.o: libDisk.c libDisk.h tinyFS.h TinyFS_errno.h
+libDisk.o: libDisk.c 
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+linkedList.o: linkedList.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+fileTableList.o: fileTableList.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+clean:
+	rm -f $(OBJS) $(PROG) 
