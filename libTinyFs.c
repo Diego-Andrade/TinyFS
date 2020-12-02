@@ -380,25 +380,20 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
 
 /** HELPER: Removes file entry from root directory **/
 int removed_file_entry_from_directory(char* name) {
-    FileEntry* entry = findEntry_fd(openedFilesList, FD);
-
-    // Open file check
-    if (entry <= 0) 
-        RET_ERROR(INVALID_FD);
-
-    // Find entry in root inode or extend blocks
     char temp[BLOCKSIZE];
 
     Blocknum lastBlk = -1;              // Used to removed inode extend
     Blocknum currBlk = RINODE_BNUM;     // Start search in root inode
     char* offset;                       // Offset inside temp
+    
+    // Find entry in root inode or extend blocks
     while (currBlk != 0) {
         if (readBlock(mountedDisk, currBlk, temp) < 0) 
             RET_ERROR(FAILED_TO_READ);
 
         offset = temp + INODE_NAME_START;                                       // Start a list of filenames
         for( ; offset != temp + INODE_EXTEND ; offset += FILE_ENTRY_SIZE) {     // Go through all until reach extend pointer
-            if (strcmp(name, offset, MAX_FILENAME_SIZE + 1) == 0) {             // Compare first MAX_FILENAME_SIZE + 1 (null terminator)
+            if (strncmp(name, offset, MAX_FILENAME_SIZE + 1) == 0) {             // Compare first MAX_FILENAME_SIZE + 1 (null terminator)
                 goto Erase;
             }
         }
