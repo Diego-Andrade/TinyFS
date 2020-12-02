@@ -9,10 +9,10 @@ $(PROG): $(OBJS)
 tinyFSDemo.o: tinyFSDemo.c libTinyFS.o 
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-libTinyFS.o: libTinyFS.c
+libTinyFS.o: libTinyFS.c libDisk.o fileTableList.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-libDisk.o: libDisk.c 
+libDisk.o: libDisk.c linkedList.o
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 linkedList.o: linkedList.c
@@ -22,4 +22,4 @@ fileTableList.o: fileTableList.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(OBJS) $(PROG) 
+	rm -f $(OBJS) $(PROG) tfsTest

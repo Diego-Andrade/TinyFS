@@ -47,8 +47,10 @@ int openDisk(char *filename, int nBytes) {
 int closeDisk(int disk) {
     if (removeNode(mountTable, disk) < 0)
         return -1;
+    
     if (mountTable->numEntries == 0)
     {
+        disk_count = 0;
         purgeList(mountTable);
         mountTable = NULL;
     }
