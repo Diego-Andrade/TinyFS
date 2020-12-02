@@ -208,6 +208,7 @@ int findOpenEntry(int *currBlock, char *block)
         }
         if (block[i] == '\0')
             return i;
+        i += FILE_ENTRY_SIZE;
     }
     return -1;
 }
