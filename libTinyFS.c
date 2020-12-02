@@ -372,7 +372,7 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
         else
             blockCounter -= 1;
         
-        memset(wBlock, 0, BLOCKSIZE);
+        memset(wBlock + FREE_DATA_START, 0, BLOCKSIZE);         // Delete only data portion and not format
         if (size < FE_MAX_DATA)
         {
             memcpy(wBlock + FREE_DATA_START, bufferPtr, size);
