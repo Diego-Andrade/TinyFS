@@ -15,8 +15,8 @@
 #define MAGICNUMLOC 1   // Req
 
 //Inode Struct
-#define INODE_NAME_START 2
-#define INODE_SIZE_START 11
+#define INODE_NAME_START 4
+#define INODE_SIZE_START 2
 #define INODE_BLOCKS_START 13
 #define INODE_DATA_START 15
 
@@ -25,7 +25,8 @@
 #define INODE_MAX_FE ((INODE_EXTEND - INODE_FE_LIST) / sizeof(Blocknum))
 
 // Root Inode
-#define FILE_ENTRY_SIZE (MAX_FILENAME_SIZE + 1 + 2)      //+1 for null char, +2 for the two point block numbers
+#define FILE_ENTRY_SIZE (MAX_FILENAME_SIZE + 1 + sizeof(Blocknum))      //+1 for null char, +2 for the two point block numbers
+#define RINODE_MAX_ENTRIES ((BLOCKSIZE - INODE_DATA_START - sizeof(Blocknum)) / FILE_ENTRY_SIZE)   //Blocksize - metadata - fileExtent blocknum
 
 // File Extend
 #define FE_DATA 2                               // Start of data 

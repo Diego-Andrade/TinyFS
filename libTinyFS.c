@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
 #include "fileTableList.h"
 #include "tinyFS.h"
@@ -36,7 +35,7 @@ int tfs_mkfs(char *filename, int nBytes) {
     memset(buffer, 0, BLOCKSIZE);
     buffer[BLOCKTYPELOC] = SUPERBLOCK;
     buffer[MAGICNUMLOC] = MAGICNUMBER;
-    if (num_blocks > 65535)                 //Max Number of blocks
+    if (num_blocks > MAX_NUMBLOCKS)                 //Max Number of blocks
         RET_ERROR(OUT_OF_BOUNDS);    //*error overflow of numblocks counter
     //Number of Free Blocks
     bytes2Ptr = (Bytes2_t*)(buffer + 2);     //taking bytes 2-3
@@ -53,8 +52,8 @@ int tfs_mkfs(char *filename, int nBytes) {
     memset(buffer, 0, BLOCKSIZE);
     buffer[BLOCKTYPELOC] = INODE;
     buffer[MAGICNUMLOC] = MAGICNUMBER;
-    buffer[2] = '/';
-    buffer[3] = '\0';                       //filename takes 9 bytes (2-10)
+    buffer[INODE_NAME_START] = '/';
+    buffer[INODE_NAME_START - 1] = '\0';                       //filename takes 9 bytes (2-10)
 
     //Inode Extend is NULL at end of file (Bytes BLOCKSIZE - 2 to BLOCKSIZE - 1)
     if ((errorNum = writeBlock(d, RINODE_BNUM, buffer)) < 0)
@@ -103,13 +102,6 @@ int tfs_unmount(void)
     counter = 0;
 }
 
-//Given the address of the entry (file, bnum) return pointer to start of bnum
-Bytes2_t* Inode_GetBlock(int8_t *byte)
-{
-    while (*(byte)++ != '\0');
-    return (Bytes2_t*)byte;
-}
-
 //Updates free blocks to be file extent and update the super block
 int updateFreeBlock()
 {
@@ -148,49 +140,67 @@ int writeNextFreeBlock(Bytes2_t* dest, char *block)
 
 //Helper function to find the location of a file name. Returns Null on read error and if not found
 // i = starting location, currBlock is a return variable to tell where it ended up and can be null, and block is a pointer to an allocated buffer
-//currBlock will be inaccurate if issue from read thus errorNum < 0
-char *findFile(char *name, int *i, Bytes2_t *currBlock, char *block)
+//currBlock will be changed to RINODE_BNUM and block will change to inode block if currBlock is not RINODE_BNUM
+//freeEntry can still be invalid such as not enough bytes for entry so should be checked still
+char *findFile(char *name, int *freeEntry, Bytes2_t *currBlock, char *block)
 {
-    Bytes2_t fileExtent;
-    Bytes2_t currBlock_val = (currBlock != NULL) ? *currBlock : RINODE_BNUM;
+    Bytes2_t *fileExtent = (Bytes2_t*)(block + INODE_EXTEND);
+    Bytes2_t *num_files = block + INODE_SIZE_START;
+    Bytes2_t filesToFind;
+    int i = INODE_DATA_START;
+    *freeEntry = 0;
 
-    while((block)[*i] != '\0')                     //Assumes filename cannot not be NULL
+    if (*currBlock != RINODE_BNUM)
     {
-        while(*i + FILE_ENTRY_SIZE - 1 < BLOCKSIZE - 2 && (block)[*i] != '\0')
+        if ((errorNum = readBlock(mountedDisk, RINODE_BNUM, block)) < 0)
+            return NULL;
+        *currBlock = RINODE_BNUM;
+    }
+
+    filesToFind = *num_files;
+
+    while(filesToFind > 0)                     //Assumes filename cannot not be NULL
+    {
+        if (block[i] == '\0')       //Empty Entry
         {
-            if (strcmp(block + *i, name) == 0)           //Filename is found
-            {
-                if (currBlock)
-                    *currBlock = currBlock_val;
-                return block + *i;
-            }
-            *i += FILE_ENTRY_SIZE;
+            if (*freeEntry == 0)
+                *freeEntry = i;
         }
-        fileExtent = *((Bytes2_t*)(block + BLOCKSIZE - 2));
-        if (fileExtent != 0)      //if FileExtend exists
+        else 
         {
-            currBlock_val = fileExtent;
-            if ((errorNum = readBlock(mountedDisk, currBlock_val, block)) < 0)
+            if (strcmp(block + i, name) == 0)       //Filename is found
+                return block + i;
+            filesToFind -= 1;                       //Decrements counter if file not found
+        }
+        if (filesToFind > 0 && i + FILE_ENTRY_SIZE - 1 >= BLOCKSIZE - 2)   //If next iteration is out of bounds
+        {
+            if (*fileExtent == 0)
+            {
+                errorNum = FORMAT_ISSUE;
+                return NULL;
+            }
+            *currBlock = *fileExtent;
+            if ((errorNum = readBlock(mountedDisk, *currBlock, block)) < 0)
                 return NULL;
             if ((block)[BLOCKTYPELOC] != FILEEXTEND || (block)[MAGICNUMLOC] != MAGICNUMBER)
             {
                 errorNum = FORMAT_ISSUE;
                 return NULL;
             }
-            *i = FREE_DATA_START;
+            i = FE_DATA + sizeof(Blocknum);
         }
+        i += FILE_ENTRY_SIZE;
     }
-    if (currBlock)
-        *currBlock = currBlock_val;
     return NULL;
 }
 
 fileDescriptor tfs_openFile(char *name)
 {
     FileEntry *Entry;
-    int i;
+    int newFileLocation;
     Bytes2_t currBlock;
     int fileExtent;
+    char *fileLocation;
     char block[BLOCKSIZE];
 
     if (mountedDisk <= 0)
@@ -205,27 +215,24 @@ fileDescriptor tfs_openFile(char *name)
         return Entry->fd;
     
     //Checks if file is on disk
-    currBlock = 1;
+    currBlock = RINODE_BNUM;
     if ((errorNum = readBlock(mountedDisk, currBlock, block)) < 0)
         RET_ERROR(errorNum);
     if (block[BLOCKTYPELOC] != INODE || block[MAGICNUMLOC] != MAGICNUMBER)
         RET_ERROR(FORMAT_ISSUE);
-    i = INODE_DATA_START;
-    //Searches Root Inode for File and searches fileExtent block if it exists
-    int file_inode = findFile(name, &i, &currBlock, block);
 
-    if (file_inode > 0)
+    //Searches Root Inode for File and searches fileExtent block if it exists
+    if ((fileLocation = findFile(name, &newFileLocation, &currBlock, block)) != NULL)
     {
-        registerEntry(openedFilesList, name, file_inode, 0, counter);
+        registerEntry(openedFilesList, name, (Bytes2_t)(fileLocation + MAX_FILENAME_SIZE + 1),0, counter);
         return counter++;
     }
-
-    if (errorNum < 0)           /** TODO: what is this checking? **/
+    if (errorNum < 0)           //Check if an error occured during FindFile
         RET_ERROR(errorNum);
     
     //Create a New File
     Bytes2_t *blockPtr = (Bytes2_t*)(block + BLOCKSIZE - 2);
-    if (i + FILE_ENTRY_SIZE >= BLOCKSIZE - 2)
+    if (newFileLocation + FILE_ENTRY_SIZE >= FE_MAX_DATA)
     {
         if ((errorNum = writeNextFreeBlock(blockPtr, block)) < 0)
             RET_ERROR(errorNum);
@@ -237,11 +244,12 @@ fileDescriptor tfs_openFile(char *name)
             RET_ERROR(errorNum);
         if (block[BLOCKTYPELOC] != FILEEXTEND || block[MAGICNUMLOC] != MAGICNUMBER)
             RET_ERROR(FORMAT_ISSUE);
-        i = FREE_DATA_START;
+        newFileLocation = FREE_DATA_START + sizeof(Blocknum);
     }
-    blockPtr = (Bytes2_t*)(block + i + MAX_FILENAME_SIZE + 1);
-    strcpy(block + i, name);
-    if ((errorNum = writeNextFreeBlock(blockPtr, block)) < 0)
+    blockPtr = (Bytes2_t*)(block + newFileLocation + MAX_FILENAME_SIZE + 1);    //Points to new entry
+    *((Bytes2_t*)(block + INODE_SIZE_START)) += 1;              //updates file number in inode
+    strcpy(block + newFileLocation, name);                      //Writes name
+    if ((errorNum = writeNextFreeBlock(blockPtr, block)) < 0)   //Gets blocknum for the file
         RET_ERROR(errorNum);
     if ((errorNum = writeBlock(mountedDisk, currBlock, block)) < 0)
         RET_ERROR(errorNum);
@@ -252,10 +260,10 @@ fileDescriptor tfs_openFile(char *name)
     if (block[BLOCKTYPELOC] != FILEEXTEND || block[MAGICNUMLOC] != MAGICNUMBER)
             RET_ERROR(FORMAT_ISSUE);
     block[BLOCKTYPELOC] = INODE;
-    strcpy(block + FREE_DATA_START, name);
-    *((Bytes2_t*)(block + INODE_SIZE_START)) = 0;     //size
-    *((Bytes2_t*)(block + INODE_BLOCKS_START)) = 0;     //data blocks
-    *((Bytes2_t*)(block + BLOCKSIZE - 2)) = 0;     //File Extent
+    strcpy(block + INODE_NAME_START, name);           //Writes Name
+    *((Bytes2_t*)(block + INODE_SIZE_START)) = 0;     //Resets Size
+    *((Bytes2_t*)(block + INODE_BLOCKS_START)) = 0;   //Resets Number of Blocks
+    *((Bytes2_t*)(block + BLOCKSIZE - 2)) = 0;        //Resets File Extent
     if ((errorNum = writeBlock(mountedDisk, *blockPtr, block)) < 0)
         RET_ERROR(errorNum);
 
@@ -284,8 +292,6 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
     if ((errorNum = readBlock(mountedDisk, RINODE_BNUM, block)) < 0)
         RET_ERROR(errorNum);
     
-    i = INODE_DATA_START;
-    currBlock = RINODE_BNUM;
     if ((filePtr = findFile(entry->fileName, &i, &currBlock, block)) == NULL)
     {
         if (errorNum < 0)
@@ -300,7 +306,10 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
     Bytes2_t *sizePtr = (Bytes2_t*)(block + INODE_SIZE_START);
     Bytes2_t *freeBlocks = (Bytes2_t*)(block + INODE_BLOCKS_START);
 
-    int blocksNeeded = ((int)ceil(size / (BLOCKSIZE - 2.0))) - *freeBlocks;
+    int blocksNeeded = size / FE_MAX_DATA;
+    if (size % FE_MAX_DATA > 0)
+        blocksNeeded += 1;
+    blocksNeeded -= *freeBlocks;
     if (blocksNeeded > *((Bytes2_t*)(spBlk + 2)))
         RET_ERROR(INSUFFICIENT_SPACE);
     
@@ -316,6 +325,7 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
     wBlock[MAGICNUMBER] = MAGICNUMBER;
 
     entry->cursor = 0;  //Reset cursor
+    entry->size = 0;
     while (size > 0)
     {
         if (i + 2 - 1 > BLOCKSIZE - 2)
@@ -344,17 +354,19 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
             blockCounter -= 1;
         
         memset(wBlock, 0, BLOCKSIZE);
-        if (size < BLOCKSIZE - 2)
+        if (size < FE_MAX_DATA)
         {
             memcpy(wBlock + FREE_DATA_START, bufferPtr, size);
             bufferPtr += size;
+            entry->size += size;
             size = 0;
         }
         else
         {
-            memcpy(wBlock + FREE_DATA_START, bufferPtr, BLOCKSIZE - 2);
-            bufferPtr += BLOCKSIZE - 2;
-            size -= BLOCKSIZE - 2;
+            memcpy(wBlock + FREE_DATA_START, bufferPtr, FE_MAX_DATA);
+            bufferPtr += FE_MAX_DATA;
+            entry->size += FE_MAX_DATA;
+            size -= FE_MAX_DATA;
         }
         if ((errorNum = writeBlock(mountedDisk, *blockPtr, wBlock)) < 0)        //Write to data block
             RET_ERROR(errorNum);
