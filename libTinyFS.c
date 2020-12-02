@@ -258,8 +258,9 @@ fileDescriptor tfs_openFile(char *name)
     if ((errorNum = writeBlock(mountedDisk, currBlock, block)) < 0)
         RET_ERROR(errorNum);
 
+    currBlock = *blockPtr;
     //Update free block to inode block with the name of file
-    if ((errorNum = readBlock(mountedDisk, *blockPtr, block)) < 0)
+    if ((errorNum = readBlock(mountedDisk, currBlock, block)) < 0)
         RET_ERROR(errorNum);
     if (block[BLOCKTYPELOC] != FILEEXTEND || block[MAGICNUMLOC] != MAGICNUMBER)
             RET_ERROR(FORMAT_ISSUE);
@@ -268,10 +269,11 @@ fileDescriptor tfs_openFile(char *name)
     *((Bytes2_t*)(block + INODE_SIZE_START)) = 0;     //Resets Size
     *((Bytes2_t*)(block + INODE_BLOCKS_START)) = 0;   //Resets Number of Blocks
     *((Bytes2_t*)(block + BLOCKSIZE - 2)) = 0;        //Resets File Extent
-    if ((errorNum = writeBlock(mountedDisk, *blockPtr, block)) < 0)
+
+    if ((errorNum = writeBlock(mountedDisk, currBlock, block)) < 0)
         RET_ERROR(errorNum);
 
-    registerEntry(openedFilesList, name, *blockPtr, 0, counter);
+    registerEntry(openedFilesList, name, currBlock, 0, counter);
     return counter++;
 }
 
