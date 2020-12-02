@@ -378,9 +378,61 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
     }
 }
 
-/** HELPER: Removes file entry from table **/
-int removed_file_entry(fileDescriptor FD) {
+/** HELPER: Removes file entry from root directory **/
+int removed_file_entry_from_directory(char* name) {
+    FileEntry* entry = findEntry_fd(openedFilesList, FD);
+
+    // Open file check
+    if (entry <= 0) 
+        RET_ERROR(INVALID_FD);
+
+    // Find entry in root inode or extend blocks
+    char temp[BLOCKSIZE];
+
+    Blocknum lastBlk = -1;              // Used to removed inode extend
+    Blocknum currBlk = RINODE_BNUM;     // Start search in root inode
+    char* offset;                       // Offset inside temp
+    while (currBlk != 0) {
+        if (readBlock(mountedDisk, currBlk, temp) < 0) 
+            RET_ERROR(FAILED_TO_READ);
+
+        offset = temp + INODE_NAME_START;                                       // Start a list of filenames
+        for( ; offset != temp + INODE_EXTEND ; offset += FILE_ENTRY_SIZE) {     // Go through all until reach extend pointer
+            if (strcmp(name, offset, MAX_FILENAME_SIZE + 1) == 0) {             // Compare first MAX_FILENAME_SIZE + 1 (null terminator)
+                goto Erase;
+            }
+        }
+
+        lastBlk = currBlk;
+        currBlk = temp[INODE_EXTEND];
+    }
+
+    if (currBlk == 0)
+        RET_ERROR(FILE_NOT_FOUND);
     
+    // Erase data
+    Erase: 
+    Bytes2_t* size = temp[INODE_SIZE_START];
+    *size -= 1;
+    
+    // Removed inode extend
+    if (size == 0 && lastBlk != -1) {      
+        Blocknum next_extend = temp[INODE_EXTEND];          // Next link
+        free_block(currBlk);
+        
+        if (readBlock(mountedDisk, lastBlk, temp) < 0)      // Prev link
+            RET_ERROR(FAILED_TO_READ);
+
+        temp[INODE_EXTEND] = next_extend;                   // Removing extend by linking past
+        if (writeBlock(mountedDisk, lastBlk, temp) < 0) 
+            RET_ERROR(BLOCK_WRITE_FAILED);
+
+    } else {
+        memset(offset, NULL, FILE_ENTRY_SIZE);
+        if (writeBlock(mountedDisk, currBlk, temp) < 0) 
+            RET_ERROR(BLOCK_WRITE_FAILED);
+    }
+
     return 0;
 }
 
@@ -454,8 +506,9 @@ int tfs_deleteFile(fileDescriptor FD) {
     if (free_block(entry->inode) < 0)
             RET_ERROR(BLOCK_WRITE_FAILED);
 
-    // Erase filetable entry
-    removed_file_entry(FD);
+    // Erase file entry
+    removed_file_entry_from_directory(entry->fileName);
+    removeEntry(openedFilesList, FD);
 }
 
 /** HELPER: Get the physical block number of logical file_ext block  
