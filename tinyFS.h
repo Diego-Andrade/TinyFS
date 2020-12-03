@@ -6,6 +6,7 @@
 #define MAGICNUMBER 0x44        // Used to identify formating
 #define MAX_FILENAME_SIZE 8     // Max size of filename excluding null terminator
 #define MAX_NUMBLOCKS 65536
+#define MIN_BLOCK_NECESSARY 4   // Minumun blocks necessary for file system
 
 typedef int fileDescriptor;
 typedef unsigned int Bytes4_t;
