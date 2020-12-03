@@ -481,7 +481,7 @@ int free_block(Blocknum bNum) {
 int removed_file_entry_from_directory(char* name) {
     char temp[BLOCKSIZE];
 
-    Blocknum lastBlk = -1;              // Used to removed inode extend
+    Blocknum lastBlk = -1;              // Previous inode, used for deleting inode extends
     Blocknum currBlk = RINODE_BNUM;     // Start search in root inode
     char* offset;                       // Offset inside temp
     
@@ -510,15 +510,15 @@ int removed_file_entry_from_directory(char* name) {
     Bytes2_t* size = (Bytes2_t*) (temp+INODE_SIZE_START);
     *size -= 1;
     
-    // Removed inode extend
+    // Removed inode extend link
     if (size == 0 && lastBlk != -1) {      
         Blocknum next_extend = temp[INODE_EXTEND];          // Next link
-        free_block(currBlk);
+        free_block(currBlk);                                // Delete current inode
         
-        if (readBlock(mountedDisk, lastBlk, temp) < 0)      // Prev link
+        if (readBlock(mountedDisk, lastBlk, temp) < 0)      // Get prev inode
             RET_ERROR(FAILED_TO_READ);
 
-        temp[INODE_EXTEND] = next_extend;                   // Removing extend by linking past
+        temp[INODE_EXTEND] = next_extend;                   // Update link to next inode extend
         if (writeBlock(mountedDisk, lastBlk, temp) < 0) 
             RET_ERROR(BLOCK_WRITE_FAILED);
 
