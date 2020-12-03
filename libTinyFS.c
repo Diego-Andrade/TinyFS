@@ -630,3 +630,47 @@ int tfs_seek(fileDescriptor FD, int offset) {
     entry->cursor = new_loc;
     return 0;
 }
+
+int tfs_rename(fileDescriptor FD, char* name) {
+    if (strlen(name) > FILENAME_MAX) 
+        RET_ERROR(INVALID_NAME);
+
+    char temp[BLOCKSIZE];
+
+    Blocknum currBlk = RINODE_BNUM;     // Start search in root inode
+    char* offset;                       // Offset inside temp
+    
+    // Find entry in root inode or extend blocks
+    while (currBlk != 0) {
+        if (readBlock(mountedDisk, currBlk, temp) < 0) 
+            RET_ERROR(FAILED_TO_READ);
+
+        offset = temp + INODE_NAME_START;                                       // Start a list of filenames
+        for( ; offset != temp + INODE_EXTEND ; offset += FILE_ENTRY_SIZE) {     // Go through all until reach extend pointer
+            if (strncmp(name, offset, MAX_FILENAME_SIZE + 1) == 0) {             // Compare first MAX_FILENAME_SIZE + 1 (null terminator)
+                goto Rename;
+            }
+        }
+
+        currBlk = temp[INODE_EXTEND];
+    }
+
+    // Rename entry in inode
+    Rename: 
+    if (currBlk == 0)
+        RET_ERROR(FILE_NOT_FOUND);
+
+    strncpy(offset, name, FILENAME_MAX);
+
+    if (writeBlock(mountedDisk, currBlk, temp) < 0) 
+        RET_ERROR(BLOCK_WRITE_FAILED);
+
+    // Rename in file inode
+    Blocknum file_inode = *(offset + FILENAME_MAX + 1);         // Get file_inode from inode entry. +1 for null char
+    if (readBlock(mountedDisk, file_inode, temp) < 0) 
+            RET_ERROR(FAILED_TO_READ);
+
+    strncpy(temp[INODE_NAME_START], name, FILENAME_MAX);
+
+    return 0;
+}
