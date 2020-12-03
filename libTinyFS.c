@@ -323,6 +323,25 @@ int tfs_closeFile(fileDescriptor FD)
     return 0;
 }
 
+/** HELPER: Erases a give block and adds to free block list **/
+int free_block(Blocknum bNum) {
+    char empty_block[BLOCKSIZE];
+    memset(empty_block, 0, BLOCKSIZE);
+    empty_block[BLOCKTYPELOC] = FREE_TYPE;
+    empty_block[MAGICNUMLOC] = MAGICNUMBER;
+    empty_block[FREE_DATA_START] = spBlk[SUPER_FREE_LIST];      // Adding link 
+    if (writeBlock(mountedDisk, bNum, empty_block) < 0)
+        RET_ERROR(BLOCK_WRITE_FAILED);
+
+    // Update superblock
+    spBlk[SUPER_FREE_LIST] = bNum;
+    spBlk[SUPER_FREE_COUNT] += 1;
+    if (writeBlock(mountedDisk, SUPERBLOCK_BNUM, spBlk) < 0)
+        RET_ERROR(BLOCK_WRITE_FAILED);
+
+    return 0;
+}
+
 int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
 {
     FileEntry *entry;
@@ -498,25 +517,6 @@ Blocknum get_file_extend(char* inode, Blocknum file_ext) {
     
     fe_list = (Blocknum*) (inode + FE_DATA);                    // Get pointer to start of fe list, using fe block
     return fe_list[file_ext];
-}
-
-/** HELPER: Erases a give block and adds to free block list **/
-int free_block(Blocknum bNum) {
-    char empty_block[BLOCKSIZE];
-    memset(empty_block, 0, BLOCKSIZE);
-    empty_block[BLOCKTYPELOC] = FREE_TYPE;
-    empty_block[MAGICNUMLOC] = MAGICNUMBER;
-    empty_block[FREE_DATA_START] = spBlk[SUPER_FREE_LIST];      // Adding link 
-    if (writeBlock(mountedDisk, bNum, empty_block) < 0)
-        RET_ERROR(BLOCK_WRITE_FAILED);
-
-    // Update superblock
-    spBlk[SUPER_FREE_LIST] = bNum;
-    spBlk[SUPER_FREE_COUNT] += 1;
-    if (writeBlock(mountedDisk, SUPERBLOCK_BNUM, spBlk) < 0)
-        RET_ERROR(BLOCK_WRITE_FAILED);
-
-    return 0;
 }
 
 /** HELPER: Removes file entry from root directory **/
