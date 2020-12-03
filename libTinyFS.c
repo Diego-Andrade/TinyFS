@@ -19,7 +19,7 @@ int errorNum = 0;
 
 int tfs_mkfs(char *filename, int nBytes) {
     /** TODO: Define min disk size? **/
-    if (nBytes < BLOCKSIZE * 2) return DISK_INVALID_SIZE;  // Not enough bytes to make a disk
+    if (nBytes < BLOCKSIZE * MIN_BLOCK_NECESSARY) return DISK_INVALID_SIZE;  // Not enough bytes to make a disk
 
     int d = openDisk(filename, nBytes);
 

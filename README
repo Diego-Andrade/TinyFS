@@ -1,7 +1,7 @@
 Diego Andrade andrader@calpoly.edu
 
 
-Our TinyFS works pretty well, having all the core functionality.
+Our TinyFS works pretty well, having all the core functionality. We attempted to make it as modular as possible, allowing for different blocksize, block address sizes and different block structures.
 
 Trade offs:
     We have chosen to go with and index based list for file extends. This was done to ensure a single corrupted block will not cause us to lose all data.
@@ -29,5 +29,5 @@ Bugs:
             //  /"/`---\\ \\"`-._
         _.-'"           "`-.`-.
 
-        
+
             
