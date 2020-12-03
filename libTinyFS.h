@@ -16,13 +16,13 @@
 
 // Superblock
 #define SUPER_TYPE SUPERBLOCK
-#define SUPER_FREE_LIST 2  
-#define SUPER_FREE_COUNT (SUPER_FREE_LIST + sizeof(Blocknum))  // Next item after free list link, which is blocknum size
+#define SUPER_FREE_COUNT 2 
+#define SUPER_FREE_LIST (SUPER_FREE_COUNT + sizeof(Blocknum))  // Listlink
 
 //Inode Struct
 #define INODE_TYPE INODE
-#define INODE_NAME_START 4
 #define INODE_SIZE_START 2
+#define INODE_NAME_START 4
 #define INODE_BLOCKS_START 13
 #define INODE_DATA_START 15
 

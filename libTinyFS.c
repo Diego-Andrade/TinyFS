@@ -547,7 +547,7 @@ int tfs_deleteFile(fileDescriptor FD) {
     if (entry->size % FE_MAX_DATA > 0)
         total_data_blks += 1;
     
-    for (int i = 0; i < total_data_blks - 1; i++) {         // file extends are 0 based
+    for (int i = 0; i < total_data_blks; i++) {         // file extends are 0 based
         Blocknum to_erase = get_file_extend(inode, i);
         if (free_block(to_erase) < 0)
             RET_ERROR(BLOCK_WRITE_FAILED);
