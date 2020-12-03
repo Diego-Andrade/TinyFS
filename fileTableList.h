@@ -13,7 +13,8 @@ typedef struct FileEntry
    char* fileName;   // Name of file
    Bytes2_t inode;   // Block number of inode
    int cursor;       // Current file ptr location in file
-   int size;         
+   int size;   
+   Bytes2_t perms;        // Permissions for this file     
    int fd;           // Index in FileTable
    struct FileEntry *next;  
 } FileEntry;
@@ -26,7 +27,7 @@ typedef struct FileTable
 } FileTable;
 
 FileTable *createFileTable();
-int registerEntry(FileTable *table, char* fileName, Blocknum inode, int size, int fd);
+int registerEntry(FileTable *table, char* fileName, Blocknum inode, Bytes2_t perms, int size, int fd);
 FileEntry *findEntry_fd(FileTable *table, int fd);
 FileEntry *findEntry_name(FileTable *table, char* filename);
 int removeEntry(FileTable *table, int fd);

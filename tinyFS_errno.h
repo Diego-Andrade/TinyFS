@@ -46,3 +46,5 @@ on the UNIX* machines for examples of the types of errors you might catch and re
 
 #define OUT_OF_BOUNDS -14
 #define TFS_EOF -15
+
+#define FILE_IS_RO -16

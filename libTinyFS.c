@@ -251,7 +251,8 @@ fileDescriptor tfs_openFile(char *name)
         Blocknum bnum = *((Blocknum*)(fileLocation + MAX_FILENAME_SIZE + 1));
         if ((errorNum = readBlock(mountedDisk, bnum, block)) < 0)
             RET_ERROR(errorNum);
-        registerEntry(openedFilesList, name, bnum, *((Blocknum*)(block + INODE_SIZE_START)), counter);
+        registerEntry(openedFilesList, name, bnum, *((Blocknum*)(block + INODE_PERM_START)),
+            *((Blocknum*)(block + INODE_SIZE_START)), counter);
         return counter++;
     }
     if (errorNum < 0)           //Check if an error occured during FindFile
@@ -305,12 +306,13 @@ fileDescriptor tfs_openFile(char *name)
     strcpy(block + INODE_NAME_START, name);           //Writes Name
     *((Bytes2_t*)(block + INODE_SIZE_START)) = 0;     //Resets Size
     *((Bytes2_t*)(block + INODE_BLOCKS_START)) = 0;   //Resets Number of Blocks
+    *((Bytes2_t*)(block + INODE_PERM_START)) = PERM_RW;
     *((Bytes2_t*)(block + BLOCKSIZE - 2)) = 0;        //Resets File Extent
 
     if ((errorNum = writeBlock(mountedDisk, currBlock, block)) < 0)
         RET_ERROR(errorNum);
 
-    registerEntry(openedFilesList, name, currBlock, 0, counter);
+    registerEntry(openedFilesList, name, currBlock, PERM_RW, 0, counter);
     return counter++;
 }
 
@@ -332,6 +334,10 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
 
     if ((entry = findEntry_fd(openedFilesList, FD)) == NULL)
         RET_ERROR(FILE_INVALID_FD);
+    
+    if (entry->perms == PERM_RO)      //Check Permissions and exits if not RW == 0x00 
+        RET_ERROR(FILE_IS_RO);
+
     if ((errorNum = readBlock(mountedDisk, RINODE_BNUM, block)) < 0)
         RET_ERROR(errorNum);
     
@@ -398,6 +404,9 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
         }
         if ((errorNum = writeBlock(mountedDisk, *blockPtr, wBlock)) < 0)        //Write to data block
             RET_ERROR(errorNum);
+
+        if (size <= 0)   //Exits if write is complete
+            break;
         if (i + 2 - 1 > BLOCKSIZE - 2)
         {       //Create file extent for inode if file needs more blocks
             blockPtr = (Bytes2_t*)(block + BLOCKSIZE - 2);
@@ -411,8 +420,31 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
             if (block[BLOCKTYPELOC] != FILEEXTEND || block[MAGICNUMLOC] != MAGICNUMBER)
                 RET_ERROR(BLOCK_FORMAT_ISSUE);
             i = FREE_DATA_START;
+            i -= 2;
         }
         i += 2;                                                                 //Size of blockNum
+    }
+    i += 2;
+    while (blockCounter > 0)
+    {
+        char temp[BLOCKSIZE];
+
+        memcpy(temp, block, BLOCKSIZE);
+        free_block(*((Bytes2_t*)(temp + i)));
+        if (blockCounter <= 0)
+            break;
+        if (i + 2 - 1> BLOCKSIZE - 2)                  //Create file extent for inode if file needs more blocks
+        {   
+            if (*((Bytes2_t*)(temp + BLOCKSIZE - 2)) == 0)         //File Extent should exist
+                RET_ERROR(BLOCK_FORMAT_ISSUE);
+            if ((errorNum = readBlock(mountedDisk, *((Bytes2_t*)(temp + BLOCKSIZE - 2)), temp)) < 0)
+                RET_ERROR(errorNum);
+            if (temp[BLOCKTYPELOC] != FILEEXTEND || temp[MAGICNUMLOC] != MAGICNUMBER)
+                RET_ERROR(BLOCK_FORMAT_ISSUE);
+            i = FREE_DATA_START;
+            i -= 2;
+        }
+        i += 2;
     }
     if (currBlock == bNum)
     {
@@ -714,5 +746,45 @@ int tfs_readdir() {
     }
 
     printf("\n");       // Add a bit of spacing after files
+    return 0;
+}
+
+int tfs_makeRO(char *name)
+{
+    FileEntry *entry;
+    char buffer[BLOCKSIZE];
+
+    if ((entry = findEntry_name(openedFilesList, name)) == NULL)    //Get File metadata
+        RET_ERROR(FILE_NOT_FOUND);
+    entry->perms = PERM_RO;
+
+    if (readBlock(mountedDisk, entry->inode, buffer) < 0)           //Gets inode block
+        RET_ERROR(BLOCK_READ_FAILED);
+    
+    *((Bytes2_t*)(buffer + INODE_PERM_START)) = PERM_RO;            //Sets permission to RO
+
+    if (writeBlock(mountedDisk, entry->inode, buffer) < 0)          //Writes block back into disk
+        RET_ERROR(BLOCK_WRITE_FAILED);
+
+    return 0;
+}
+
+int tfs_makeRW(char *name)
+{
+    FileEntry *entry;
+    char buffer[BLOCKSIZE];
+
+    if ((entry = findEntry_name(openedFilesList, name)) == NULL)    //Get File metadata
+        RET_ERROR(FILE_NOT_FOUND);
+    entry->perms = PERM_RO;
+
+    if (readBlock(mountedDisk, entry->inode, buffer) < 0)           //Gets inode block
+        RET_ERROR(BLOCK_READ_FAILED);
+    
+    *((Bytes2_t*)(buffer + INODE_PERM_START)) = PERM_RW;            //Sets permission to RW
+
+    if (writeBlock(mountedDisk, entry->inode, buffer) < 0)          //Writes block back into disk
+        RET_ERROR(BLOCK_WRITE_FAILED);
+
     return 0;
 }

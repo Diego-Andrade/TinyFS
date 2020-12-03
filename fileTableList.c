@@ -17,7 +17,7 @@ FileTable *createFileTable()
    return list;
 }
 
-FileEntry *makeNewEntry(char* fileName, Bytes2_t inode, int size, int fd)
+FileEntry *makeNewEntry(char* fileName, Blocknum inode, Bytes2_t perms, int size, int fd)
 {
    FileEntry *newNode;
    if((newNode = malloc(sizeof(FileEntry))) == NULL)
@@ -30,17 +30,18 @@ FileEntry *makeNewEntry(char* fileName, Bytes2_t inode, int size, int fd)
    newNode->inode = inode;
    newNode->cursor = 0;
    newNode->size = size;
+   newNode->perms = perms;
    newNode->fd = fd;
    return newNode;
 }
 
-int registerEntry(FileTable *list, char* fileName, Blocknum inode, int size, int fd)
+int registerEntry(FileTable *list, char* fileName, Blocknum inode, Bytes2_t perms, int size, int fd)
 {
    FileEntry *newNode;
 
    if (list == NULL)
       return EMPTY_LIST;
-   newNode = makeNewEntry(fileName, inode, size, fd);
+   newNode = makeNewEntry(fileName, inode, perms, size, fd);
    if (list->head == NULL)
    {
       list->head = newNode;
