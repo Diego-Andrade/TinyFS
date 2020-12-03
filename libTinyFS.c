@@ -17,6 +17,8 @@ FileTable *openedFilesList;
 int counter = 0;
 int errorNum = 0;
 
+int free_block(Blocknum bNum);
+
 int tfs_mkfs(char *filename, int nBytes) {
     /** TODO: Define min disk size? **/
     if (nBytes < BLOCKSIZE * MIN_BLOCK_NECESSARY) return DISK_INVALID_SIZE;  // Not enough bytes to make a disk
@@ -424,28 +426,28 @@ int tfs_writeFile(fileDescriptor FD,char *buffer, int size)
         }
         i += 2;                                                                 //Size of blockNum
     }
-    i += 2;
-    while (blockCounter > 0)
-    {
-        char temp[BLOCKSIZE];
+    // i += 2;
+    // while (blockCounter > 0)
+    // {
+    //     char temp[BLOCKSIZE];
 
-        memcpy(temp, block, BLOCKSIZE);
-        free_block(*((Bytes2_t*)(temp + i)));
-        if (blockCounter <= 0)
-            break;
-        if (i + 2 - 1> BLOCKSIZE - 2)                  //Create file extent for inode if file needs more blocks
-        {   
-            if (*((Bytes2_t*)(temp + BLOCKSIZE - 2)) == 0)         //File Extent should exist
-                RET_ERROR(BLOCK_FORMAT_ISSUE);
-            if ((errorNum = readBlock(mountedDisk, *((Bytes2_t*)(temp + BLOCKSIZE - 2)), temp)) < 0)
-                RET_ERROR(errorNum);
-            if (temp[BLOCKTYPELOC] != FILEEXTEND || temp[MAGICNUMLOC] != MAGICNUMBER)
-                RET_ERROR(BLOCK_FORMAT_ISSUE);
-            i = FREE_DATA_START;
-            i -= 2;
-        }
-        i += 2;
-    }
+    //     memcpy(temp, block, BLOCKSIZE);
+    //     free_block(*((Bytes2_t*)(temp + i)));
+    //     if (blockCounter <= 0)
+    //         break;
+    //     if (i + 2 - 1> BLOCKSIZE - 2)                  //Create file extent for inode if file needs more blocks
+    //     {   
+    //         if (*((Bytes2_t*)(temp + BLOCKSIZE - 2)) == 0)         //File Extent should exist
+    //             RET_ERROR(BLOCK_FORMAT_ISSUE);
+    //         if ((errorNum = readBlock(mountedDisk, *((Bytes2_t*)(temp + BLOCKSIZE - 2)), temp)) < 0)
+    //             RET_ERROR(errorNum);
+    //         if (temp[BLOCKTYPELOC] != FILEEXTEND || temp[MAGICNUMLOC] != MAGICNUMBER)
+    //             RET_ERROR(BLOCK_FORMAT_ISSUE);
+    //         i = FREE_DATA_START;
+    //         i -= 2;
+    //     }
+    //     i += 2;
+    // }
     if (currBlock == bNum)
     {
         *sizePtr = size_l;
