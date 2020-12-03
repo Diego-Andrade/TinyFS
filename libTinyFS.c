@@ -244,7 +244,7 @@ fileDescriptor tfs_openFile(char *name)
     if ((fileLocation = findFile(name, &currBlock, block)) != NULL)
     {
         Blocknum bnum = *((Blocknum*)(fileLocation + MAX_FILENAME_SIZE + 1));
-        if ((errorNum = readBlock(mountedDisk, currBlock, block)) < 0)
+        if ((errorNum = readBlock(mountedDisk, bnum, block)) < 0)
             RET_ERROR(errorNum);
         registerEntry(openedFilesList, name, bnum, *((Blocknum*)(block + INODE_SIZE_START)), counter);
         return counter++;
