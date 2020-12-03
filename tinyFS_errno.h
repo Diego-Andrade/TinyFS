@@ -9,12 +9,11 @@ on the UNIX* machines for examples of the types of errors you might catch and re
 #define RET_ERROR(x) {\
    int X = (x); char error[30];\
    if (X == DISK_NOT_FOUND) strcpy(error, "DISK NOT FOUND");\
-   else if (X == INSUFFICIENT_SPACE) strcpy(error, "INSUFFICIENT SPACE");\
-   else if (X == FAILURE_TO_OPEN) strcpy(error, "FAILURE TO OPEN");\
+   else if (X == DISK_INSUFFICIENT_SPACE) strcpy(error, "INSUFFICIENT SPACE");\
    else if (X == FILE_NOT_FOUND) strcpy(error, "FILE NOT FOUND");\
-   else if (X == INVALID_NAME) strcpy(error, "INVALID NAME");\
+   else if (X == FILE_OPEN_FAILED) strcpy(error, "FAILURE TO OPEN");\
+   else if (X == FILE_INVALID_NAME) strcpy(error, "INVALID NAME");\
    else if (X == EMPTY_LIST) strcpy(error, "EMPTY LIST");\
-   else if (X == BYTES_SMALLER_THAN_BLOCKSIZE) strcpy(error, "BYTES SMALLER THAN BLOCKSIZE");\
    else if (X == FORMAT_ISSUE) strcpy(error, "FORMAT ISSUE");\
    else if (X == OUT_OF_BOUNDS) strcpy(error, "OUT OF BOUNDS");\
    else if (X == FILE_NULL) strcpy(error, "FILE NULL");\
@@ -26,14 +25,16 @@ on the UNIX* machines for examples of the types of errors you might catch and re
    fprintf(stderr, "tinyFS ERROR: %s\n", error); fflush(stderr);\
    return X; }
 
-#define DISK_NOT_FOUND -3
-#define INSUFFICIENT_SPACE -4
-#define FAILURE_TO_OPEN -5
-#define FILE_NOT_FOUND -6
-#define INVALID_NAME -8
+#define DISK_NOT_FOUND -2
+#define DISK_OPEN_FAILED -3
+#define DISK_INSUFFICIENT_SPACE -4
+
+#define FILE_NOT_FOUND -5
+#define FILE_OPEN_FAILED -6
+#define FILE_INVALID_NAME -8
+
 #define EMPTY_LIST -9
 
-#define BYTES_SMALLER_THAN_BLOCKSIZE -10
 #define FORMAT_ISSUE -11
 #define OUT_OF_BOUNDS -12
 #define FILE_NULL -13
