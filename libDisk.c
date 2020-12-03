@@ -24,7 +24,7 @@ int openDisk(char *filename, int nBytes) {
     FILE* file = fopen(filename, "rb+");
     if (file == NULL || nBytes > 0) {
         if (nBytes < BLOCKSIZE)
-            return BYTES_SMALLER_THAN_BLOCKSIZE;
+            return FILE_INVALID_FD;
 
         FILE* file = fopen(filename, "wb");
         fseek(file, num_blocks * BLOCKSIZE - 1, SEEK_SET);
@@ -65,7 +65,7 @@ int readBlock(int disk, int bNum, void *block)
 
     file = fopen(entry->fileName, "rb");
     if (file == NULL)
-        return FILE_NULL;
+        return DISK_NOT_FOUND;
     if (fseek(file, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
     {
         fclose(file);
@@ -74,7 +74,7 @@ int readBlock(int disk, int bNum, void *block)
     if (fread(block, BLOCKSIZE, 1, file) < 1)
     {
         fclose(file);
-        return BYTES_SMALLER_THAN_BLOCKSIZE;
+        return DISK_INVALID_SIZE;
     }
     fclose(file);
     return 0;
@@ -92,7 +92,7 @@ int writeBlock(int disk, int bNum, void *block)
     offset = bNum*BLOCKSIZE;
     file = fopen(entry->fileName, "rb+");
     if (file == NULL)
-        return FILE_NULL;
+        return DISK_NOT_FOUND;
 
     if (fseek(file, offset, SEEK_SET) == -1)    // Sets File offset to offset bytes
     {
@@ -102,7 +102,7 @@ int writeBlock(int disk, int bNum, void *block)
     if (fwrite(block, BLOCKSIZE, 1, file) < 1)
     {
         fclose(file);
-        return BYTES_SMALLER_THAN_BLOCKSIZE;
+        return DISK_INVALID_SIZE;
     }
     fclose(file);
     return 0;
