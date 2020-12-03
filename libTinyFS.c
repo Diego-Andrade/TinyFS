@@ -99,9 +99,12 @@ int tfs_mount(char *diskname) {
 
 int tfs_unmount(void)
 {
+    if (openedFilesList == NULL)
+        RET_ERROR(DISK_NOT_FOUND);
     purgeTable(openedFilesList);
     openedFilesList = NULL;
     counter = 0;
+    return 0;
 }
 
 //Updates free blocks to be file extent and update the super block
