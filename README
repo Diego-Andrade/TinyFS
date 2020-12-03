@@ -1,5 +1,33 @@
 Diego Andrade andrader@calpoly.edu
 
 
-Notes:
+Our TinyFS works pretty well, having all the core functionality.
 
+Trade offs:
+    We have chosen to go with and index based list for file extends. This was done to ensure a single corrupted block will not cause us to lose all data.
+
+    We have also implemented a linked base inode extention as opposed to a nested index one. This one done inorder to simplify the logic and take advantage of our fimilarity with linked list to ensure quick development.
+
+Features:
+    We have implemented the following features:
+        - tfs_rename
+        - tfs_readdir
+        - tfs_makeRO
+        - tfs_makeRW 
+        -tfs_writeByte
+
+
+Limitations:
+    Our current limitation is the size of block number address. Currently it is set to 2 Bytes, for a total of 65535 addressable blocks.
+
+    Another limitation is the index based approach mentioned earlier, as a lot of data space is being wasted towards indexing.
+
+Bugs:
+                  /\ .---._
+               /\/.-. /\ /\/\  
+             //\\oo //\\/\\\\
+            //  /"/`---\\ \\"`-._
+        _.-'"           "`-.`-.
+
+        
+            
