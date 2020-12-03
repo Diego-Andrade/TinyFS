@@ -6,25 +6,28 @@ implement the codes as a set of statically defined macros. Take a look at man 3 
 on the UNIX* machines for examples of the types of errors you might catch and report. */
 #include <stdio.h>
 
-/*
+///* VERBOS
 #define RET_ERROR(x) {\
    int X = (x); char error[30];\
    if (X == DISK_NOT_FOUND) strcpy(error, "DISK NOT FOUND");\
-   else if (X == DISK_INVALID_SIZE) strcpy(error, "INSUFFICIENT SPACE");\
-   else if (X == FILE_NOT_FOUND) strcpy(error, "FILE NOT FOUND");\
-   else if (X == FILE_OPEN_FAILED) strcpy(error, "FAILURE TO OPEN");\
-   else if (X == FILE_INVALID_NAME) strcpy(error, "INVALID NAME");\
-   else if (X == FILE_INVALID_FD) strcpy(error, "INVALID FILE DESCRIPTOR");\
-   else if (X == FILE_INVALID_OFFSET) strcpy(error, "INVALID FILE OFFSET");\
-   else if (X == BLOCK_FORMAT_ISSUE) strcpy(error, "FORMAT ISSUE");\
-   else if (X == BLOCK_READ_FAILED) strcpy(error, "UNABLE TO READ FILE");\
-   else if (X == OUT_OF_BOUNDS) strcpy(error, "OUT OF BOUNDS");\
-   else if (X == TFS_EOF) strcpy(error, "ATTEMPED TO READ PAST FILE");\
-   else strcpy(error, "UNKNOWN ERROR - ");\
+   else if(X == DISK_OPEN_FAILED) strcpy(error, "DISK FAILED TO OPEN");\
+   else if(X == DISK_INVALID_SIZE) strcpy(error, "INVALID DISK SIZE");\
+   else if(X == FILE_NOT_FOUND) strcpy(error, "FILE NOT FOUND");\
+   else if(X == FILE_OPEN_FAILED) strcpy(error, "FILE FAILED TO OPEN");\
+   else if(X == FILE_INVALID_NAME) strcpy(error, "INVALID FILE NAME");\
+   else if(X == FILE_INVALID_FD) strcpy(error, "INVALID FILEDESCRIPTER");\
+   else if(X == FILE_INVALID_OFFSET) strcpy(error, "INVAID FILE OFFSET");\
+   else if(X == BLOCK_INVALID ) strcpy(error, "INVALID BLOCK");\
+   else if(X == BLOCK_FORMAT_ISSUE ) strcpy(error, "UNEXPECTED BLOCK FORMATE");\
+   else if(X == BLOCK_READ_FAILED ) strcpy(error, "FAILED TO READ BLOCK");\
+   else if(X == BLOCK_WRITE_FAILED ) strcpy(error, "FAILED TO WRITE BLOCK");\
+   else if(X == OUT_OF_BOUNDS ) strcpy(error, "OUT OF BOUNDS");\
+   else if(X == TFS_EOF ) strcpy(error, "END OF FILE");\
+   else strcpy(error, "UNKOWN ERROR");\
    fprintf(stderr, "tinyFS ERROR: %s\n", error); fflush(stderr);\
    return X; }
 
-*/
+//*/
 
 #define DISK_NOT_FOUND -2
 #define DISK_OPEN_FAILED -3

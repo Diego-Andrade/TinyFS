@@ -59,7 +59,7 @@ int closeDisk(int disk) {
 
 int readBlock(int disk, int bNum, void *block)
 {
-    off_t offset = bNum*BLOCKSIZE;
+    long offset = bNum*BLOCKSIZE;
     FILE* file;
     Node *entry = getNode(mountTable, disk);
 
@@ -82,7 +82,7 @@ int readBlock(int disk, int bNum, void *block)
 
 int writeBlock(int disk, int bNum, void *block)
 {
-    off_t offset;
+    long offset;
     FILE* file;
     Node *entry;
 

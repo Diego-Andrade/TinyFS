@@ -148,7 +148,7 @@ int writeNextFreeBlock(Bytes2_t* dest, char *block)
 //Helper function to find the location of a file name. Returns Null on read error and if not found
 // i = starting location, currBlock is a return variable to tell where it ended up and can be null, and block is a pointer to an allocated buffer
 //must read root inode before calling function
-char *findFile(char *name, int *currBlock, char *block)
+char *findFile(char *name, Blocknum *currBlock, char *block)
 {
     Bytes2_t *fileExtent = (Bytes2_t*)(block + INODE_EXTEND);
     Bytes2_t *num_files = (Bytes2_t*) (block + INODE_SIZE_START);
@@ -194,7 +194,7 @@ char *findFile(char *name, int *currBlock, char *block)
     return NULL;
 }
 
-int findOpenEntry(int *currBlock, char *block)
+int findOpenEntry(Blocknum *currBlock, char *block)
 {
     int i = INODE_DATA_START;
     while (i < BLOCKSIZE - 2 || *((Blocknum*)(block + INODE_EXTEND)) != 0)
@@ -222,7 +222,7 @@ fileDescriptor tfs_openFile(char *name)
 {
     FileEntry *Entry;
     int newFileLocation;
-    Bytes2_t currBlock;
+    Blocknum currBlock;
     int fileExtent;
     char *fileLocation;
     char block[BLOCKSIZE];
@@ -260,7 +260,7 @@ fileDescriptor tfs_openFile(char *name)
     if (currBlock != RINODE_BNUM)
     {
         if ((errorNum = readBlock(mountedDisk, RINODE_BNUM, block)) < 0)
-            return NULL;
+            return BLOCK_READ_FAILED;
         currBlock = RINODE_BNUM;
     }
     

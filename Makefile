@@ -1,4 +1,5 @@
 CC = gcc
+CFLAGS = -std=c99
 FLAGS = -Wall -g
 PROG = tinyFSDemo
 OBJS = tinyFSDemo.o libTinyFS.o libDisk.o linkedList.o fileTableList.o
