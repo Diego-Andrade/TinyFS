@@ -24,7 +24,8 @@
 #define INODE_SIZE_START 2
 #define INODE_NAME_START 4
 #define INODE_BLOCKS_START 13
-#define INODE_DATA_START 15
+#define INODE_PERM_START 15
+#define INODE_DATA_START 16
 
 #define INODE_FE_LIST 15
 #define INODE_EXTEND (BLOCKSIZE - sizeof(Blocknum))
@@ -42,6 +43,10 @@
 // Free 
 #define FREE_TYPE FREE
 #define FREE_DATA_START 2
+
+//File Permissions
+#define PERM_RO 1
+#define PERM_RW 0
 
 
 /* Makes a blank TinyFS file system of size nBytes on the unix file specified by 
@@ -89,3 +94,8 @@ int tfs_rename(fileDescriptor FD, char* newName);
 /* lists all the files and directories on the disk, print the list to stdout -- Note: if you 
 don’t have hierarchical directories, this just reads the root directory aka “all files” */
 int tfs_readdir();
+
+//Extra
+int tfs_makeRO(char *name); /* makes the file read only. If a file is RO, all tfs_write() and tfs_deleteFile()  functions that try to use it fail. */ 
+int tfs_makeRW(char *name); /* makes the file read-write */
+int tfs_writeByte(fileDescriptor FD, unsigned int data); /* writes data into one byte at cursor and increments cursor */
